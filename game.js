@@ -2230,7 +2230,7 @@ const SETTING_ROWS = [
   { key: 'sfx', label: 'Sound effects' },
   { key: 'ambience', label: 'Ambience (wind)' },
 ];
-const SETTINGS = { master: 1, music: 0.8, sfx: 1, ambience: 0.8 };
+const SETTINGS = { master: 1, music: 0.8, sfx: 1, ambience: 0.8, musicBoxWind: false };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('elfSettings') || '{}')); } catch (_) {}
 function saveSettings() { try { localStorage.setItem('elfSettings', JSON.stringify(SETTINGS)); } catch (_) {} }
 function applySettings() {
@@ -2238,9 +2238,10 @@ function applySettings() {
   const now = audio.ctx.currentTime;
   audio.master.gain.setTargetAtTime(0.9 * SETTINGS.master, now, 0.05);
   // in the music box it's just the music: wind, drone and effects fade out
-  const musicOnly = state === 'jukebox' ? 0 : 1;
-  audio.sfx.gain.setTargetAtTime(SETTINGS.sfx * musicOnly, now, 0.2);
-  audio.amb.gain.setTargetAtTime(SETTINGS.ambience * musicOnly, now, 0.2);
+  // (unless you've switched the wind back on in there)
+  const box = state === 'jukebox';
+  audio.sfx.gain.setTargetAtTime(SETTINGS.sfx * (box ? 0 : 1), now, 0.2);
+  audio.amb.gain.setTargetAtTime(SETTINGS.ambience * (box && !SETTINGS.musicBoxWind ? 0 : 1), now, 0.2);
   audio.setMusic(audio.musicLevel);
 }
 let previewT = 0;
@@ -2314,6 +2315,15 @@ function renderJukebox() {
   $('jbPlay').textContent = audio.musicPaused ? '▶' : '❚❚';
   $('jbNow').textContent = cur >= 0 ? TRACKS[cur].name : '—';
   $('jbVol').value = Math.round(SETTINGS.music * 100);
+  const w = $('jbWind');
+  w.textContent = '🌬 Wind: ' + (SETTINGS.musicBoxWind ? 'On' : 'Off');
+  w.setAttribute('aria-pressed', SETTINGS.musicBoxWind);
+}
+function toggleMusicBoxWind() {
+  SETTINGS.musicBoxWind = !SETTINGS.musicBoxWind;
+  saveSettings();
+  applySettings();
+  renderJukebox();
 }
 function openJukebox() {
   if (!audio.ok) audio.init();
@@ -2329,6 +2339,7 @@ function updateJukebox(dt, inp) {
     else if (dh > 0) audio.nextTrack();
     else if (dh < 0) audio.prevTrack();
   }, 0.4);
+  if (inp.settings) toggleMusicBoxWind();
   if (inp.action) {
     if (jb.sel === audio.currentTrack) audio.togglePause();
     else audio.playTrack(jb.sel);
@@ -2348,6 +2359,7 @@ function updateJukebox(dt, inp) {
   $('jbNext').addEventListener('click', () => audio.nextTrack());
   $('jbPlay').addEventListener('click', () => audio.togglePause());
   $('jbClose').addEventListener('click', closeJukebox);
+  $('jbWind').addEventListener('click', toggleMusicBoxWind);
   $('jbVol').addEventListener('input', (e) => setSetting('music', e.target.value / 100));
   $('openJukebox').addEventListener('click', (e) => { e.stopPropagation(); openJukebox(); });
 }

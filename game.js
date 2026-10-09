@@ -2237,8 +2237,10 @@ function applySettings() {
   if (!audio.ctx) return;
   const now = audio.ctx.currentTime;
   audio.master.gain.setTargetAtTime(0.9 * SETTINGS.master, now, 0.05);
-  audio.sfx.gain.setTargetAtTime(SETTINGS.sfx, now, 0.05);
-  audio.amb.gain.setTargetAtTime(SETTINGS.ambience, now, 0.05);
+  // in the music box it's just the music: wind, drone and effects fade out
+  const musicOnly = state === 'jukebox' ? 0 : 1;
+  audio.sfx.gain.setTargetAtTime(SETTINGS.sfx * musicOnly, now, 0.2);
+  audio.amb.gain.setTargetAtTime(SETTINGS.ambience * musicOnly, now, 0.2);
   audio.setMusic(audio.musicLevel);
 }
 let previewT = 0;
@@ -2882,6 +2884,7 @@ function setState(s) {
   if (s !== 'playing') $('prompt').classList.add('hidden');
   if (s !== 'playing' && s !== 'banishing') { toastTimer = 0; $('toast').style.opacity = 0; }
   if (s !== 'playing' && s !== 'paused' && document.pointerLockElement) document.exitPointerLock();
+  applySettings();
   if (s === 'jukebox') audio.setMusic(0.7);
   else if (s !== 'settings') audio.setMusic(s === 'playing' ? 0.55 : s === 'title' ? 0.35 : 0.15);
   if (s !== 'jukebox' && s !== 'settings' && audio.musicPaused) audio.togglePause();   // never leave the game silent

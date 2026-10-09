@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elf on the Shelf: Hollow Hill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game"></div>
+
+  <div id="vignette"></div>
+  <div id="redflash"></div>
+
+  <div id="hud" class="hidden">
+    <div id="candy"><span class="corn"></span><span id="candyCount">0</span><span class="of">/ 8</span></div>
+    <div class="bar"><label>FLASHLIGHT</label><div class="track"><i id="battery"></i></div></div>
+    <div class="bar"><label>STAMINA</label><div class="track"><i id="stamina"></i></div></div>
+    <div class="bar"><label>COURAGE</label><div class="track"><i id="courage"></i></div></div>
+  </div>
+  <div id="objective" class="hidden"></div>
+  <div id="prompt" class="hidden"></div>
+  <div id="toast"></div>
+  <div id="padstatus">🎮 No controller found. Press any button on it to connect</div>
+
+  <div class="overlay" id="title">
+    <div class="panel">
+      <h1>Elf on the Shelf</h1>
+      <h2>Hollow Hill</h2>
+      <p class="story">On Halloween night the Elf crawled off his shelf.
+        He only moves <em>when nobody is watching</em>, and now he's watching <em>you</em>.</p>
+      <p class="story">Find the <b>8 cursed candy corns</b> on the hills and upstairs in the old houses, then bring
+        them to the witch's cauldron to banish him. Keep your flashlight on him and don't look away for long.</p>
+      <p class="story small">He isn't alone. <b>Ghosts</b> vanish in your flashlight. <b>Skeletons</b> climb out of
+        their graves, and the light only slows them. Something with eight legs waits <b>upstairs</b>.
+        Every scare drains your courage.</p>
+      <p class="story small">Elf blocking your way? <b>Hold your flashlight on him up close</b> and he'll scurry off.</p>
+      <div class="controls">
+        <div><h3>Controller</h3>
+          <ul>
+            <li><b>Left stick</b> Move</li>
+            <li><b>Right stick</b> Look</li>
+            <li><b>RT / RB</b> Flashlight on/off</li>
+            <li><b>LT / B / L3</b> Sprint</li>
+            <li><b>A</b> Start / use cauldron</li>
+            <li><b>Start</b> Pause</li>
+          </ul></div>
+        <div><h3>Keyboard</h3>
+          <ul>
+            <li><b>WASD</b> Move</li>
+            <li><b>Mouse</b> Look (click to lock)</li>
+            <li><b>F / Click</b> Flashlight</li>
+            <li><b>Shift</b> Sprint</li>
+            <li><b>Enter / E</b> Start / use</li>
+            <li><b>P</b> Pause</li>
+          </ul></div>
+      </div>
+      <p class="start blink">Press <b>A</b> or <b>Enter</b> to begin… if you dare</p>
+      <p class="hint">Headphones recommended. You'll hear his bells when he moves.</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="paused">
+    <div class="panel small">
+      <h1>Paused</h1>
+      <p class="story">He's still out there. Waiting.</p>
+      <p class="start">Press <b>Start</b> / <b>A</b> / <b>Enter</b> to resume</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <div class="panel small">
+      <h1 class="red" id="goTitle">The Elf Got You</h1>
+      <p class="story" id="goText">He was right behind you the whole time.</p>
+      <p class="stats" id="goStats"></p>
+      <p class="start blink">Press <b>A</b> or <b>Enter</b> to try again</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="win">
+    <div class="panel small">
+      <h1 class="green">Elf Banished!</h1>
+      <p class="story">The cauldron swallows him whole. Hollow Hill is quiet again…<br><em>…until next December.</em></p>
+      <p class="stats" id="winStats"></p>
+      <p class="start blink">Press <b>A</b> or <b>Enter</b> to play again</p>
+    </div>
+  </div>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

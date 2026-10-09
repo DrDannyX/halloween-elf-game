@@ -1720,11 +1720,11 @@ const rpt = (str, n) => Array(n).fill(str).join(' ');
 
 const TRACKS = [
   {
-    name: 'Jingle Bells (in a minor key)', bpm: 120, loops: 2,
+    name: 'Jingle Bells (in a minor key)', desc: 'Christmas · broken music box', bpm: 120, loops: 2,
     parts: [{ voice: 'musicbox', seq: 'Eb5/1 Eb5/1 Eb5/2 Eb5/1 Eb5/1 Eb5/2 Eb5/1 G5/1 C5/1.5 D5/.5 Eb5/4 F5/1 F5/1 F5/1.5 F5/.5 F5/1 Eb5/1 Eb5/1 Eb5/.5 Eb5/.5 Eb5/1 D5/1 D5/1 Eb5/1 D5/2 G5/2 Eb5/1 Eb5/1 Eb5/2 Eb5/1 Eb5/1 Eb5/2 Eb5/1 G5/1 C5/1.5 D5/.5 Eb5/4 F5/1 F5/1 F5/1.5 F5/.5 F5/1 Eb5/1 Eb5/1 Eb5/.5 Eb5/.5 G5/1 G5/1 F5/1 D5/1 C5/4 R/4' }],
   },
   {
-    name: 'Carol of the Bells', bpm: 156, loops: 2,
+    name: 'Carol of the Bells', desc: 'Christmas · celesta, cellos and tolling bells', bpm: 156, loops: 2,
     parts: [
       { voice: 'celesta', seq: rpt('Bb5/1 A5/.5 Bb5/.5 G5/1', 16) },
       { voice: 'strings', gain: 0.8, seq: rpt('G2/3 F2/3 Eb2/3 D2/3', 4) },
@@ -1732,7 +1732,7 @@ const TRACKS = [
     ],
   },
   {
-    name: 'Silent Night (out of tune)', bpm: 96, loops: 2,
+    name: 'Silent Night (out of tune)', desc: 'Christmas · warped toy piano', bpm: 96, loops: 2,
     parts: [
       { voice: 'toypiano', seq: 'G4/1.5 Ab4/.5 G4/1 Eb4/3 G4/1.5 Ab4/.5 G4/1 Eb4/3 D5/2 D5/1 Bb4/3 C5/2 C5/1 G4/3 ' +
         'Ab4/2 Ab4/1 C5/1.5 Bb4/.5 Ab4/1 G4/1.5 Ab4/.5 G4/1 Eb4/3 Ab4/2 Ab4/1 C5/1.5 Bb4/.5 Ab4/1 G4/1.5 Ab4/.5 G4/1 Eb4/3 ' +
@@ -1741,7 +1741,7 @@ const TRACKS = [
     ],
   },
   {
-    name: 'We Wish You a Merry Christmas (winding down)', bpm: 132, loops: 3, windDown: true,
+    name: 'We Wish You a Merry Christmas (winding down)', desc: 'Christmas · a music box running down', bpm: 132, loops: 3, windDown: true,
     parts: [
       { voice: 'musicbox', seq: 'D4/1 G4/1 G4/.5 A4/.5 G4/.5 F#4/.5 Eb4/1 C4/1 Eb4/1 A4/1 A4/.5 Bb4/.5 A4/.5 G4/.5 F#4/1 D4/1 D4/1 ' +
         'Bb4/1 Bb4/.5 C5/.5 Bb4/.5 A4/.5 G4/1 Eb4/1 D4/.5 D4/.5 Eb4/1 A4/1 F#4/1 G4/2 R/1' },
@@ -1749,7 +1749,7 @@ const TRACKS = [
     ],
   },
   {
-    name: 'In the Hall of the Mountain King', bpm: 84, loops: 6, accel: 1.16,
+    name: 'In the Hall of the Mountain King', desc: 'Halloween · bassoon and plucked strings, getting faster', bpm: 84, loops: 6, accel: 1.16,
     parts: [
       { voice: 'bassoon', seq: 'B3/.5 C#4/.5 D4/.5 E4/.5 F#4/.5 D4/.5 F#4/1 F4/.5 C#4/.5 F4/1 E4/.5 C4/.5 E4/1 ' +
         'B3/.5 C#4/.5 D4/.5 E4/.5 F#4/.5 D4/.5 F#4/.5 B4/.5 A4/.5 F#4/.5 D4/.5 F#4/.5 A4/2' },
@@ -1757,7 +1757,7 @@ const TRACKS = [
     ],
   },
   {
-    name: 'Toccata and Fugue in D minor', bpm: 66, loops: 1, gap: 6,
+    name: 'Toccata and Fugue in D minor', desc: 'Halloween · pipe organ', bpm: 66, loops: 1, gap: 6,
     parts: [
       { voice: 'organ', seq: 'A5/.15 G5/.15 A5/1.4 R/.6 G5/.2 F5/.2 E5/.2 D5/.2 C#5/1 D5/2.2 R/1.2 ' +
         'A4/.15 G4/.15 A4/1.4 R/.6 E4/.4 F4/.4 C#4/.6 D4/2.2 R/1.2 ' +
@@ -1768,14 +1768,14 @@ const TRACKS = [
     ],
   },
   {
-    name: 'Funeral March (Chopin)', bpm: 50, loops: 2,
+    name: 'Funeral March (Chopin)', desc: 'Halloween · church bells and organ', bpm: 50, loops: 2,
     parts: [
       { voice: 'bell', seq: rpt('Bb3/1 Bb3/.75 Bb3/.25 Bb3/2 Db4/.75 C4/.25 C4/.75 Bb3/.25 Bb3/.75 A3/.25 Bb3/1', 2) },
       { voice: 'organ', gain: 0.8, seq: rpt('Bb1+F2+Db3/2 Gb1+Db2+Bb2/2', 4) },
     ],
   },
   {
-    name: 'Dies Irae (theremin)', bpm: 72, loops: 2,
+    name: 'Dies Irae (theremin)', desc: 'Halloween · theremin and ghostly choir', bpm: 72, loops: 2,
     parts: [
       { voice: 'theremin', seq: 'F4/1 E4/1 F4/1 D4/1 E4/1 C4/1 D4/2 F4/1 F4/1 G4/1 F4/1 E4/1 D4/1 C4/1 D4/1 ' +
         'A3/1 G3/1 A3/1 F3/1 G3/1 E3/1 F3/2 F4/1 E4/1 F4/1 D4/1 E4/1 C4/1 D4/2' },
@@ -1850,7 +1850,40 @@ class AudioEngine {
     tr.parts.forEach((p) => { p.notes = p.notes || parseSeq(p.seq); });
     this.track = tr;
     this.parts = tr.parts.map((p) => ({ ...p, idx: 0, next: t0, loop: 0, done: false, lastF: 0 }));
+    this.musicPaused = false;
+    this.setMusic(this.musicLevel);
     showNowPlaying(tr.name);
+    renderJukebox();
+  }
+  playTrack(ti) {
+    if (!this.ctx) return;
+    this.playPos = this.playlist.indexOf(ti) - 1;
+    this.nextTrack();
+  }
+  prevTrack() {
+    if (!this.ctx) return;
+    const n = this.playlist.length;
+    this.playPos = (this.playPos - 2 + 2 * n) % n;
+    this.nextTrack();
+  }
+  get currentTrack() { return this.ctx ? this.playlist[this.playPos] : -1; }
+  togglePause() {
+    if (!this.ctx) return;
+    if (this.musicPaused) {
+      const off = this.ctx.currentTime - this.pausedAt;
+      for (const p of this.parts) p.next += off;   // carry on from where we stopped
+      this.musicPaused = false;
+    } else {
+      this.musicPaused = true;
+      this.pausedAt = this.ctx.currentTime;
+    }
+    this.setMusic(this.musicLevel);
+    renderJukebox();
+  }
+  get progress() {
+    if (!this.parts || !this.parts.length) return 0;
+    const p = this.parts[0];
+    return clamp(p.done ? 1 : (p.loop + p.idx / p.notes.length) / this.track.loops, 0, 1);
   }
   toggleMusic() {
     this.musicMuted = !this.musicMuted;
@@ -1858,7 +1891,7 @@ class AudioEngine {
     toast(this.musicMuted ? 'Music off' : 'Music on', 1.2, '#b78cff');
   }
   update(dt, proximity) {
-    if (!this.ok || !this.track) return;
+    if (!this.ok || !this.track || this.musicPaused) return;
     const c = this.ctx, now = c.currentTime, tr = this.track;
     // the closer he is, the slower and more out of tune the music plays
     this.musicDetune = lerp(this.musicDetune, -proximity * 70, 0.05);
@@ -1958,7 +1991,7 @@ class AudioEngine {
       }
     }
   }
-  setMusic(v) { this.musicLevel = v; if (this.ctx) this.musicGain.gain.setTargetAtTime(this.musicMuted ? 0 : v * SETTINGS.music, this.ctx.currentTime, 0.5); }
+  setMusic(v) { this.musicLevel = v; if (this.ctx) this.musicGain.gain.setTargetAtTime(this.musicMuted || this.musicPaused ? 0 : v * SETTINGS.music, this.ctx.currentTime, this.musicPaused ? 0.08 : 0.5); }
   panned(vol, pan) {
     const g = this.ctx.createGain(); g.gain.value = vol;
     if (this.ctx.createStereoPanner) { const p = this.ctx.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); g.connect(p); p.connect(this.sfx); }
@@ -2234,30 +2267,87 @@ function openSettings() {
   renderSettings();
 }
 function closeSettings() { setState(menu.ret); }
-function updateSettingsMenu(dt, inp) {
-  if (inp.back || inp.pause) { closeSettings(); return; }
-  const rows = SETTING_ROWS.length + 1;   // + Back
+// Menu navigation: key taps act at once; a held stick / D-pad / key acts, then auto-repeats.
+function menuNav(m, dt, inp, act, hRepeat = 0.07) {
   // follow the stronger direction only, so a diagonal stick doesn't do two things at once
   const vert = Math.abs(inp.my) >= Math.abs(inp.mx);
   const v = vert && Math.abs(inp.my) > 0.5 ? Math.sign(inp.my) : 0, h = !vert && Math.abs(inp.mx) > 0.5 ? Math.sign(inp.mx) : 0;
-  const act = (dv, dh) => {
+  m.t -= dt;
+  if (inp.navV || inp.navH) {
+    act(inp.navV, inp.navH);
+    m.t = 0.35; m.v = inp.navV || v; m.h = inp.navH || h;
+  } else {
+    const changed = v !== m.v || h !== m.h;
+    if ((v || h) && (changed || m.t <= 0)) {
+      act(v, h);
+      m.t = changed ? 0.35 : (h ? hRepeat : 0.18);
+    }
+    m.v = v; m.h = h;
+  }
+}
+
+function updateSettingsMenu(dt, inp) {
+  if (inp.back || inp.pause) { closeSettings(); return; }
+  const rows = SETTING_ROWS.length + 1;   // + Back
+  menuNav(menu, dt, inp, (dv, dh) => {
     if (dv) { menu.sel = (menu.sel - dv + rows) % rows; renderSettings(); audio.click(); }
     else if (dh && menu.sel < SETTING_ROWS.length) { const k = SETTING_ROWS[menu.sel].key; setSetting(k, SETTINGS[k] + dh * 0.05); }
-  };
-  menu.t -= dt;
-  if (inp.navV || inp.navH) {
-    act(inp.navV, inp.navH);   // key tap
-    menu.t = 0.35; menu.v = inp.navV || v; menu.h = inp.navH || h;
-  } else {
-    // stick / D-pad / held key: act on a new direction, then auto-repeat while held
-    const changed = v !== menu.v || h !== menu.h;
-    if ((v || h) && (changed || menu.t <= 0)) {
-      act(v, h);
-      menu.t = changed ? 0.35 : (h ? 0.07 : 0.18);
-    }
-    menu.v = v; menu.h = h;
-  }
+  });
   if (inp.action && menu.sel === SETTING_ROWS.length) closeSettings();
+}
+
+// ============================================================================
+// Music box: browse and play the soundtrack from the title screen
+// ============================================================================
+const jb = { sel: 0, t: 0, v: 0, h: 0 };
+function renderJukebox() {
+  const list = $('jbList');
+  if (!list) return;
+  const cur = audio.currentTrack;
+  [...list.children].forEach((li, i) => {
+    li.classList.toggle('selected', i === jb.sel && state === 'jukebox');
+    li.classList.toggle('playing', i === cur);
+    li.querySelector('.state').textContent = i === cur ? (audio.musicPaused ? '❚❚' : '♪') : '';
+  });
+  $('jbPlay').textContent = audio.musicPaused ? '▶' : '❚❚';
+  $('jbNow').textContent = cur >= 0 ? TRACKS[cur].name : '—';
+  $('jbVol').value = Math.round(SETTINGS.music * 100);
+}
+function openJukebox() {
+  if (!audio.ok) audio.init();
+  setState('jukebox');
+  jb.sel = Math.max(0, audio.currentTrack);
+  renderJukebox();
+}
+function closeJukebox() { setState('title'); }
+function updateJukebox(dt, inp) {
+  if (inp.back || inp.pause) { closeJukebox(); return; }
+  menuNav(jb, dt, inp, (dv, dh) => {
+    if (dv) { jb.sel = (jb.sel - dv + TRACKS.length) % TRACKS.length; renderJukebox(); audio.click(); }
+    else if (dh > 0) audio.nextTrack();
+    else if (dh < 0) audio.prevTrack();
+  }, 0.4);
+  if (inp.action) {
+    if (jb.sel === audio.currentTrack) audio.togglePause();
+    else audio.playTrack(jb.sel);
+  }
+  $('jbBar').style.width = (audio.progress * 100).toFixed(1) + '%';
+}
+{
+  const list = $('jbList');
+  TRACKS.forEach((tr, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="state"></span><span class="name">${tr.name}</span><span class="desc">${tr.desc}</span>`;
+    li.addEventListener('click', () => { jb.sel = i; if (i === audio.currentTrack) audio.togglePause(); else audio.playTrack(i); });
+    li.addEventListener('mouseenter', () => { jb.sel = i; renderJukebox(); });
+    list.appendChild(li);
+  });
+  $('jbPrev').addEventListener('click', () => audio.prevTrack());
+  $('jbNext').addEventListener('click', () => audio.nextTrack());
+  $('jbPlay').addEventListener('click', () => audio.togglePause());
+  $('jbClose').addEventListener('click', closeJukebox);
+  $('jbVol').addEventListener('input', (e) => setSetting('music', e.target.value / 100));
+  $('openJukebox').addEventListener('click', (e) => { e.stopPropagation(); openJukebox(); });
 }
 {
   // build the slider rows and wire up the mouse
@@ -2644,7 +2734,7 @@ addEventListener('mousemove', (e) => {
 const lockPointer = () => { try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch (_) {} };
 addEventListener('mousedown', (e) => {
   if (!audio.ok) audio.init();
-  if (e.target.closest && e.target.closest('button, input, #settings')) return;
+  if (e.target.closest && e.target.closest('button, input, #settings, #jukebox')) return;
   if (state === 'title' || ((state === 'gameover' || state === 'won') && stateTime > 0.8)) { startGame(); lockPointer(); }
   else if (state === 'playing') {
     if (!document.pointerLockElement) lockPointer();
@@ -2699,6 +2789,7 @@ function readInput() {
     inp.pause = edge(9) || edge(8);
     inp.back = edge(1);
     inp.settings = edge(2);
+    inp.jukebox = edge(4);
     if (!audio.ok && gp.buttons.some((x) => x.pressed)) audio.init();
     prevPad = gp.buttons.map((x) => x.pressed || x.value > 0.5);
   }
@@ -2718,6 +2809,7 @@ function readInput() {
   inp.navV = (keyEdges.has('ArrowUp') || keyEdges.has('KeyW') ? 1 : 0) - (keyEdges.has('ArrowDown') || keyEdges.has('KeyS') ? 1 : 0);
   inp.navH = (keyEdges.has('ArrowRight') || keyEdges.has('KeyD') ? 1 : 0) - (keyEdges.has('ArrowLeft') || keyEdges.has('KeyA') ? 1 : 0);
   if (keyEdges.has('KeyO')) inp.settings = true;
+  if (keyEdges.has('KeyJ')) inp.jukebox = true;
   const len = Math.hypot(inp.mx, inp.my);
   if (len > 1) { inp.mx /= len; inp.my /= len; }
   inp.mouseDX = mouseDX; inp.mouseDY = mouseDY;
@@ -2777,19 +2869,22 @@ function resetGame() {
 
 function setState(s) {
   state = s; stateTime = 0;
-  for (const id of ['title', 'paused', 'gameover', 'win', 'settings']) $(id).classList.add('hidden');
+  for (const id of ['title', 'paused', 'gameover', 'win', 'settings', 'jukebox']) $(id).classList.add('hidden');
   const playingUI = s === 'playing' || s === 'paused' || s === 'banishing';
   $('hud').classList.toggle('hidden', !playingUI);
   $('objective').classList.toggle('hidden', !playingUI);
   if (s === 'title') $('title').classList.remove('hidden');
   if (s === 'paused') $('paused').classList.remove('hidden');
   if (s === 'settings') $('settings').classList.remove('hidden');
+  if (s === 'jukebox') $('jukebox').classList.remove('hidden');
   if (s === 'gameover') $('gameover').classList.remove('hidden');
   if (s === 'won') $('win').classList.remove('hidden');
   if (s !== 'playing') $('prompt').classList.add('hidden');
   if (s !== 'playing' && s !== 'banishing') { toastTimer = 0; $('toast').style.opacity = 0; }
   if (s !== 'playing' && s !== 'paused' && document.pointerLockElement) document.exitPointerLock();
-  if (s !== 'settings') audio.setMusic(s === 'playing' ? 0.55 : s === 'title' ? 0.35 : 0.15);
+  if (s === 'jukebox') audio.setMusic(0.7);
+  else if (s !== 'settings') audio.setMusic(s === 'playing' ? 0.55 : s === 'title' ? 0.35 : 0.15);
+  if (s !== 'jukebox' && s !== 'settings' && audio.musicPaused) audio.togglePause();   // never leave the game silent
 }
 
 let nowPlayingTimer = null;
@@ -3868,7 +3963,12 @@ function frame(now) {
     case 'title':
       updateAttract(dt, clockT);
       if (inp.settings) openSettings();
+      else if (inp.jukebox) openJukebox();
       else if (inp.action) startGame();
+      break;
+    case 'jukebox':
+      updateAttract(dt, clockT);
+      updateJukebox(dt, inp);
       break;
     case 'settings':
       if (menu.ret === 'title') updateAttract(dt, clockT);

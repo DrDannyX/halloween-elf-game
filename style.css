@@ -63,7 +63,8 @@ html, body {
 }
 
 .overlay {
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; display: flex; align-items: safe center; justify-content: center;
+  overflow-y: auto;   /* tall menus scroll on short screens */
   background: radial-gradient(ellipse at center, rgba(10,4,20,.35), rgba(0,0,0,.8));
 }
 .panel { max-width: 760px; padding: 28px 40px; text-align: center; }
@@ -118,4 +119,26 @@ h3 { margin: 0 0 6px; color: var(--orange); font-size: 18px; }
 .setting.back.selected button { color: var(--orange); }
 @media (max-width: 640px) { .setting { grid-template-columns: 1fr; gap: 4px; } }
 
-#paused, #settings { background: radial-gradient(ellipse at center, rgba(8,4,16,.82), rgba(0,0,0,.92)); }
+#paused, #settings, #jukebox { background: radial-gradient(ellipse at center, rgba(8,4,16,.82), rgba(0,0,0,.92)); }
+
+.jb-now { font-size: 22px; color: var(--orange); margin: 10px 0 8px; min-height: 1.4em; }
+.jb-progress { height: 4px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; max-width: 420px; margin: 0 auto; }
+.jb-progress i { display: block; height: 100%; width: 0; background: var(--orange); transition: width .25s linear; }
+.jb-controls { margin: 14px 0 6px; display: flex; gap: 14px; justify-content: center; }
+.jb-controls button {
+  font-size: 20px; width: 52px; height: 44px; border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.25);
+}
+.jb-controls button:hover { background: rgba(255,138,42,.2); border-color: var(--orange); }
+#jbList { list-style: none; padding: 0; margin: 10px auto; max-width: 480px; text-align: left; }
+#jbList li {
+  display: grid; grid-template-columns: 1.6em 1fr; column-gap: 6px; padding: 7px 12px; border-radius: 8px;
+  border: 1px solid transparent; cursor: pointer;
+}
+#jbList li .state { grid-row: span 2; color: var(--orange); align-self: center; }
+#jbList li .name { font-size: 18px; }
+#jbList li .desc { font: 12px system-ui, sans-serif; color: var(--dim); }
+#jbList li.selected { background: rgba(255,138,42,.14); border-color: rgba(255,138,42,.6); }
+#jbList li.playing .name { color: var(--orange); }
+.jb-vol { display: flex; gap: 12px; align-items: center; justify-content: center; font-size: 16px; color: var(--dim); margin: 8px 0; }
+.jb-vol input { width: 180px; accent-color: var(--orange); }

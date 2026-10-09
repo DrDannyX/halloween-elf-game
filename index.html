@@ -64,7 +64,8 @@
           </ul></div>
       </div>
       <p class="start blink">Press <b>A</b> or <b>Enter</b> to begin… if you dare</p>
-      <p><button type="button" class="menu-btn" id="openSettingsTitle">⚙ Settings</button> <span class="hint">X / O</span></p>
+      <p><button type="button" class="menu-btn" id="openSettingsTitle">⚙ Settings</button> <span class="hint">X / O</span>
+        &nbsp; <button type="button" class="menu-btn" id="openJukebox">♪ Music</button> <span class="hint">LB / J</span></p>
       <p class="hint">Headphones recommended. You'll hear his bells when he moves.</p>
     </div>
   </div>
@@ -84,6 +85,23 @@
       <h1>Settings</h1>
       <div id="settingsList"></div>
       <p class="hint">D-pad / arrows: choose and adjust · B / Esc: back</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="jukebox">
+    <div class="panel small">
+      <h1>Music Box</h1>
+      <p class="jb-now"><span id="jbNow">—</span></p>
+      <div class="jb-progress"><i id="jbBar"></i></div>
+      <div class="jb-controls">
+        <button type="button" id="jbPrev" aria-label="Previous track">⏮</button>
+        <button type="button" id="jbPlay" aria-label="Play or pause">❚❚</button>
+        <button type="button" id="jbNext" aria-label="Next track">⏭</button>
+      </div>
+      <ol id="jbList"></ol>
+      <label class="jb-vol">Music volume <input type="range" id="jbVol" min="0" max="100" step="5"></label>
+      <p class="hint">D-pad / arrows: choose · A / Enter: play or pause · ◀ ▶: previous / next · B / Esc: back</p>
+      <p><button type="button" class="menu-btn" id="jbClose">Back</button></p>
     </div>
   </div>
 

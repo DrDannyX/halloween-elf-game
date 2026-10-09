@@ -35,6 +35,7 @@ You can't open `index.html` directly, because browsers block the way it loads it
 | Next music track | Y | N |
 | Mute music | | M |
 | Settings (volume) | X on the title or pause screen | O, or the Settings button |
+| Music box (play the soundtrack) | LB on the title screen | J, or the ♪ Music button |
 | Pause | Start | P / Esc |
 
 Xbox, PlayStation and Switch Pro controllers all work over Bluetooth or USB on Mac, Windows and Linux. Press a button once so the browser detects it.
@@ -65,6 +66,7 @@ Jingle Bells (minor key, broken music box), Carol of the Bells, Silent Night (wa
 We Wish You a Merry Christmas (a music box winding down), In the Hall of the Mountain King,
 Toccata and Fugue in D minor, Chopin's Funeral March, and Dies Irae on theremin.
 The music slows down and drifts out of tune as the Elf gets closer.
+To just listen, open the **♪ Music** box on the title screen and pick any track.
 
 ## Tech
 Three.js and WebGL, with procedural textures and Web Audio sound, and no asset files. WebGL runs on the GPU everywhere: browsers use Metal on macOS, DirectX on Windows, and OpenGL or Vulkan on Linux.

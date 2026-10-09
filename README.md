@@ -1,6 +1,6 @@
 # Elf on the Shelf: Hollow Hill 🎃
 
-A spooky third-person Halloween game for the Mac, with game-controller support.
+A spooky third-person Halloween game that runs in your web browser on Mac, Windows and Linux, with game-controller support.
 
 The Elf crawled off his shelf on Halloween night. **He only moves when nobody is watching.**
 Find the 8 cursed candy corns across the hills and upstairs in the three old houses, then bring them
@@ -9,7 +9,7 @@ to the witch's cauldron to banish him.
 ## Play
 **▶ Play in your browser: https://drdannyx.github.io/halloween-elf-game/**
 
-It works on Mac, Windows and Linux in Chrome, Edge, Firefox or Safari, with nothing to install. Plug in or pair a controller and press any button on it.
+It works in Chrome, Edge, Firefox or Safari, with nothing to install. Plug in or pair a controller and press any button on it.
 
 ### Play offline
 Pick the launcher for your computer. Each one starts a small local web server and opens the game in your browser.
@@ -32,16 +32,19 @@ You can't open `index.html` directly, because browsers block the way it loads it
 | Swing flashlight | X | Click / Q |
 | Sprint | LT / B / L3 | Shift |
 | Start / use cauldron | A | Enter / E |
+| Next music track | Y | N |
+| Mute music | | M |
+| Settings (volume) | X on the title or pause screen | O, or the Settings button |
 | Pause | Start | P / Esc |
 
-Xbox, PlayStation and Switch Pro controllers all work over Bluetooth or USB. Press a button once so the browser detects it.
-Rumble works in Chrome.
+Xbox, PlayStation and Switch Pro controllers all work over Bluetooth or USB on Mac, Windows and Linux. Press a button once so the browser detects it.
+Xbox controllers have the widest support, especially on Windows. Rumble works in Chrome and Edge, but not in Firefox or Safari.
 
 ## Monsters
 - **The Elf** lurks somewhere on the map. Wander into his area and he wakes up and hunts you, following your trail into houses and up the stairs. He freezes whenever you can see him, and can only catch you while you're not watching. Scare him off with your light and he slinks away to a new hiding place. Once you have all the candy, he never stops coming.
 - **Ghosts** drift through walls toward you. Shine your flashlight on one and it shrieks and vanishes.
 - **Skeletons** climb out of their graves when you walk past. Light only slows them down, but three swings of your flashlight smash them to pieces.
-- **Giant spiders** hang from the ceiling upstairs in every house and drop when you walk underneath. Light drives them back.
+- **Giant spiders** hang from the ceiling upstairs in every house and drop when you walk underneath. Light drives them back, and three swings of your flashlight squash them.
 
 Ghosts, skeletons and spiders drain your **courage**. Courage comes back slowly when you're left alone,
 and quickly inside the cauldron's glow. If it runs out, you're scared to death.
@@ -56,6 +59,13 @@ and quickly inside the cauldron's glow. If it runs out, you're scared to death.
 - He gets faster with every candy you collect, and so do the others.
 - Each house has batteries downstairs and a candy upstairs.
 
+## Music
+A playlist of creepy tunes plays in a shuffled loop, all public domain melodies synthesized live:
+Jingle Bells (minor key, broken music box), Carol of the Bells, Silent Night (warped toy piano),
+We Wish You a Merry Christmas (a music box winding down), In the Hall of the Mountain King,
+Toccata and Fugue in D minor, Chopin's Funeral March, and Dies Irae on theremin.
+The music slows down and drifts out of tune as the Elf gets closer.
+
 ## Tech
-Three.js (WebGL, rendered through Metal on macOS), with procedural textures and Web Audio sound. No asset files.
+Three.js and WebGL, with procedural textures and Web Audio sound, and no asset files. WebGL runs on the GPU everywhere: browsers use Metal on macOS, DirectX on Windows, and OpenGL or Vulkan on Linux.
 `vendor/three.module.js` is bundled, so the game runs offline. Everything else is in `game.js`.

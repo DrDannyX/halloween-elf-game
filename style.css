@@ -94,3 +94,28 @@ h3 { margin: 0 0 6px; color: var(--orange); font-size: 18px; }
   .controls { flex-direction: column; gap: 12px; }
   .panel { padding: 16px; }
 }
+
+#nowplaying {
+  position: fixed; bottom: 16px; left: 22px; font-style: italic; font-size: 17px; color: #b78cff;
+  text-shadow: 0 2px 4px #000; opacity: 0; transition: opacity 1.2s; pointer-events: none;
+}
+
+.menu-btn {
+  font: inherit; font-size: 20px; color: var(--ink); background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 6px 18px; cursor: pointer;
+}
+.menu-btn:hover { background: rgba(255,138,42,.2); border-color: var(--orange); }
+#settingsList { margin: 22px auto 10px; max-width: 460px; text-align: left; }
+.setting {
+  display: grid; grid-template-columns: 1fr 1.3fr 3.5em; align-items: center; gap: 14px;
+  padding: 10px 14px; border-radius: 8px; border: 1px solid transparent; font-size: 19px;
+}
+.setting.selected { background: rgba(255,138,42,.14); border-color: rgba(255,138,42,.6); }
+.setting input[type=range] { width: 100%; accent-color: var(--orange); }
+.setting .val { text-align: right; font-family: system-ui, sans-serif; font-size: 15px; color: var(--dim); }
+.setting.back { display: block; text-align: center; margin-top: 8px; }
+.setting.back button { font: inherit; font-size: 19px; color: var(--ink); background: none; border: none; cursor: pointer; }
+.setting.back.selected button { color: var(--orange); }
+@media (max-width: 640px) { .setting { grid-template-columns: 1fr; gap: 4px; } }
+
+#paused, #settings { background: radial-gradient(ellipse at center, rgba(8,4,16,.82), rgba(0,0,0,.92)); }

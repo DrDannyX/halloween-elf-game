@@ -23,6 +23,7 @@
   <div id="objective" class="hidden"></div>
   <div id="prompt" class="hidden"></div>
   <div id="toast"></div>
+  <div id="nowplaying"></div>
   <div id="padstatus">🎮 No controller found. Press any button on it to connect</div>
 
   <div class="overlay" id="title">
@@ -37,7 +38,7 @@
         their graves, and the light only slows them. Something with eight legs waits <b>upstairs</b>.
         Every scare drains your courage.</p>
       <p class="story small">Elf blocking your way? <b>Hold your flashlight on him up close</b> and he'll scurry off to hide.
-        <b>Swing your flashlight</b> to smash skeletons (three hits).</p>
+        <b>Swing your flashlight</b> to smash skeletons and squash spiders (three hits each).</p>
       <div class="controls">
         <div><h3>Controller</h3>
           <ul>
@@ -47,6 +48,7 @@
             <li><b>X</b> Swing flashlight</li>
             <li><b>LT / B / L3</b> Sprint</li>
             <li><b>A</b> Start / use cauldron</li>
+            <li><b>Y</b> Next music track</li>
             <li><b>Start</b> Pause</li>
           </ul></div>
         <div><h3>Keyboard</h3>
@@ -57,19 +59,31 @@
             <li><b>Click / Q</b> Swing flashlight</li>
             <li><b>Shift</b> Sprint</li>
             <li><b>Enter / E</b> Start / use</li>
+            <li><b>N / M</b> Next track / mute music</li>
             <li><b>P</b> Pause</li>
           </ul></div>
       </div>
       <p class="start blink">Press <b>A</b> or <b>Enter</b> to begin… if you dare</p>
+      <p><button type="button" class="menu-btn" id="openSettingsTitle">⚙ Settings</button> <span class="hint">X / O</span></p>
       <p class="hint">Headphones recommended. You'll hear his bells when he moves.</p>
     </div>
   </div>
 
   <div class="overlay hidden" id="paused">
-    <div class="panel small">
+    <div class="panel">
       <h1>Paused</h1>
       <p class="story">He's still out there. Waiting.</p>
+      <div id="pauseControls"></div>
       <p class="start">Press <b>Start</b> / <b>A</b> / <b>Enter</b> to resume</p>
+      <p><button type="button" class="menu-btn" id="openSettingsPause">⚙ Settings</button> <span class="hint">X / O</span></p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="settings">
+    <div class="panel small">
+      <h1>Settings</h1>
+      <div id="settingsList"></div>
+      <p class="hint">D-pad / arrows: choose and adjust · B / Esc: back</p>
     </div>
   </div>
 

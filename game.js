@@ -2364,6 +2364,7 @@ function updateJukebox(dt, inp) {
   $('jbWind').addEventListener('click', toggleMusicBoxWind);
   $('jbVol').addEventListener('input', (e) => setSetting('music', e.target.value / 100));
   $('openJukebox').addEventListener('click', (e) => { e.stopPropagation(); openJukebox(); });
+  $('playBtn').addEventListener('click', () => { if (state === 'title') { startGame(); lockPointer(); } });
 }
 {
   // build the slider rows and wire up the mouse

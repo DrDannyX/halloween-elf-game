@@ -10,6 +10,7 @@ to the witch's cauldron to banish him.
 **▶ Play in your browser: https://drdannyx.github.io/halloween-elf-game/**
 
 It works in Chrome, Edge, Firefox or Safari, with nothing to install. Plug in or pair a controller and press any button on it.
+It also works on **phones and tablets** with touch controls. Turn your phone sideways for the best view.
 
 ### Play offline
 Pick the launcher for your computer. Each one starts a small local web server and opens the game in your browser.
@@ -37,6 +38,9 @@ You can't open `index.html` directly, because browsers block the way it loads it
 | Settings (volume) | X on the title or pause screen | O, or the Settings button |
 | Music box (play the soundtrack) | LB on the title screen | J, or the ♪ Music button |
 | Pause | Start | P / Esc |
+
+**Touch screens:** a joystick appears wherever your left thumb touches; drag with your right thumb to look.
+Buttons: 🔦 flashlight · 💥 swing · 🏃 hold to sprint · ✋ use the cauldron (appears when you can) · ❚❚ pause.
 
 Xbox, PlayStation and Switch Pro controllers all work over Bluetooth or USB on Mac, Windows and Linux. Press a button once so the browser detects it.
 Xbox controllers have the widest support, especially on Windows. Rumble works in Chrome and Edge, but not in Firefox or Safari.

@@ -12,7 +12,8 @@ html, body {
   font-family: "IM Fell English", Georgia, serif;
   user-select: none; cursor: default;
 }
-#game canvas { display: block; width: 100vw; height: 100vh; }
+#game { position: fixed; inset: 0; }
+#game canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
 .hidden { display: none !important; }
 
@@ -142,3 +143,67 @@ h3 { margin: 0 0 6px; color: var(--orange); font-size: 18px; }
 #jbList li.playing .name { color: var(--orange); }
 .jb-vol { display: flex; gap: 12px; align-items: center; justify-content: center; font-size: 16px; color: var(--dim); margin: 8px 0; }
 .jb-vol input { width: 180px; accent-color: var(--orange); }
+
+/* ---------- touch screens ---------- */
+:root { --sal: env(safe-area-inset-left); }
+html, body { overscroll-behavior: none; -webkit-touch-callout: none; -webkit-user-select: none; touch-action: manipulation; }
+.overlay { touch-action: pan-y; }
+.touch-help { display: none; font-family: system-ui, sans-serif; font-size: 15px; color: var(--dim); margin: 14px 0; }
+.touch-help b { color: var(--ink); }
+body.touch .controls, body.touch #padstatus, body.touch .hint { display: none; }
+body.touch .touch-help { display: block; }
+
+#touch { position: fixed; inset: 0; z-index: 5; touch-action: none; }
+#stickBase {
+  position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.22); background: rgba(255,255,255,.05); opacity: .45; pointer-events: none;
+  transition: opacity .2s;
+}
+#stickBase.active { opacity: 1; transition: none; }
+#stickKnob {
+  position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%;
+  background: rgba(255,138,42,.45); border: 2px solid rgba(255,170,90,.7);
+}
+.tbtn {
+  position: absolute; width: 68px; height: 68px; border-radius: 50%; font-size: 28px; line-height: 1; padding: 0;
+  color: #fff; background: rgba(20,10,30,.45); border: 2px solid rgba(255,255,255,.3);
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.tbtn.down { background: rgba(255,138,42,.45); border-color: var(--orange); }
+#tSwing { width: 86px; height: 86px; font-size: 36px; right: calc(22px + env(safe-area-inset-right)); bottom: calc(26px + env(safe-area-inset-bottom)); }
+#tFlash { right: calc(124px + env(safe-area-inset-right)); bottom: calc(30px + env(safe-area-inset-bottom)); }
+#tSprint { right: calc(30px + env(safe-area-inset-right)); bottom: calc(128px + env(safe-area-inset-bottom)); }
+#tUse { right: calc(118px + env(safe-area-inset-right)); bottom: calc(116px + env(safe-area-inset-bottom)); background: rgba(40,140,60,.55); border-color: #6dff8f; }
+#tPause { width: 48px; height: 48px; font-size: 16px; right: calc(14px + env(safe-area-inset-right)); top: calc(14px + env(safe-area-inset-top)); }
+
+#rotate {
+  display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 6;
+  font: 14px system-ui, sans-serif; color: var(--ink); background: rgba(0,0,0,.6); padding: 6px 12px; border-radius: 6px; pointer-events: none;
+}
+@media (orientation: portrait) { body.touch #rotate { display: block; } }
+
+/* small screens: a more compact HUD and menus */
+@media (max-width: 900px), (max-height: 500px) {
+  #hud { top: calc(8px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); }
+  #candy { font-size: 28px; }
+  #candy .of { font-size: 18px; }
+  .track { width: 120px; height: 6px; }
+  .bar { margin-top: 4px; }
+  .bar label { font-size: 9px; }
+  #objective { font-size: 14px; top: 8px; max-width: 52vw; }
+  #toast { font-size: 26px; white-space: normal; width: 86vw; }
+  #prompt { font-size: 18px; bottom: 34%; }
+  #nowplaying { font-size: 13px; bottom: 8px; }
+  h1 { font-size: clamp(34px, 8vw, 64px); }
+  h2 { font-size: 22px; margin-bottom: 8px; }
+  .story { font-size: 15px; margin: 8px 0; }
+  .panel { padding: 12px 16px; }
+  .start { font-size: 19px; margin-top: 12px; }
+}
+@media (max-height: 500px) {
+  #title .story.small { display: none; }   /* keep the title screen to one phone screen */
+  #title h1 { font-size: clamp(30px, 7vw, 52px); }
+  .touch-help { margin: 6px 0; font-size: 13px; }
+  .touch-help p { margin: 4px 0; }
+  #title .start { margin-top: 6px; }
+}

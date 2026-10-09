@@ -52,7 +52,9 @@ const rrand = (a, b) => a + (b - a) * Math.random();
 // Renderer / scene
 // ============================================================================
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+// phones and tablets get a lighter load: lower resolution, fewer particles, smaller shadows
+const LOW_POWER = window.matchMedia('(pointer: coarse)').matches;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, LOW_POWER ? 1.25 : 1.75));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1357,7 +1359,7 @@ const bats = [];
 
 // ---- loose leaves drifting down around you ----
 const fallingLeaves = (() => {
-  const n = 220;
+  const n = LOW_POWER ? 110 : 220;
   const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.22, 0.22), new THREE.MeshStandardMaterial({
     map: leafTex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9,
   }), n);
@@ -1633,7 +1635,7 @@ const spiders = houses.map((h) => ({ ...makeSpider(), house: h, pos: new THREE.V
 // ---- flashlight ----
 const flashlight = new THREE.SpotLight(0xfff0cf, 140, CFG.flashRange, 0.4, 0.45, 1.7);
 flashlight.castShadow = true;
-flashlight.shadow.mapSize.set(1024, 1024);
+flashlight.shadow.mapSize.set(LOW_POWER ? 512 : 1024, LOW_POWER ? 512 : 1024);
 flashlight.shadow.camera.near = 0.3;
 flashlight.shadow.camera.far = CFG.flashRange;
 flashlight.shadow.bias = -0.0005;
@@ -2382,7 +2384,8 @@ function updateJukebox(dt, inp) {
   list.appendChild(back);
   for (const id of ['openSettingsTitle', 'openSettingsPause']) $(id).addEventListener('click', (e) => { e.stopPropagation(); openSettings(); });
   // the pause menu shows the same controls list as the title screen
-  $('pauseControls').replaceWith(document.querySelector('#title .controls').cloneNode(true));
+  $('pauseControls').replaceWith(document.querySelector('#title .controls').cloneNode(true), document.querySelector('#title .touch-help').cloneNode(true));
+  $('resumeBtn').addEventListener('click', () => { if (state === 'paused') setState('playing'); });
   renderSettings();
 }
 
@@ -2610,7 +2613,7 @@ function updateParticles(dt, t) {
     fogCount++;
     if (Math.hypot(p.x - centre.x, p.z - centre.z) > 36 && p.life < p.max - 3) p.life = p.max - 3;
   }
-  const fogTarget = 120 + Math.round(inForest * 60);
+  const fogTarget = (LOW_POWER ? 50 : 120) + Math.round(inForest * (LOW_POWER ? 30 : 60));
   for (let k = 0; k < 3 && fogCount < fogTarget; k++, fogCount++) {
     const a = Math.random() * Math.PI * 2, r = rrand(3, 32);
     const x = centre.x + Math.cos(a) * r, z = centre.z + Math.sin(a) * r;
@@ -2669,7 +2672,7 @@ function updateParticles(dt, t) {
     });
   });
   // ash and dust floating everywhere
-  every('ash', 50, dt, () => {
+  every('ash', LOW_POWER ? 22 : 50, dt, () => {
     const a = Math.random() * Math.PI * 2, r = rrand(0.5, 15);
     const x = centre.x + Math.cos(a) * r, z = centre.z + Math.sin(a) * r;
     glowFx.emit({
@@ -2745,7 +2748,88 @@ addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 addEventListener('mousemove', (e) => {
   if (document.pointerLockElement) { mouseDX += e.movementX; mouseDY += e.movementY; }
 });
-const lockPointer = () => { try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch (_) {} };
+const lockPointer = () => { if (touch.on) return; try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch (_) {} };
+
+// ============================================================================
+// Touch controls (phones and tablets): a floating joystick on the left,
+// drag on the right to look, and buttons under the right thumb.
+// ============================================================================
+const touch = {
+  on: false, mx: 0, my: 0, lookDX: 0, lookDY: 0,
+  sprint: false, flash: false, swing: false, use: false, pause: false,
+  stickId: null, lookId: null, lookX: 0, lookY: 0, baseX: 0, baseY: 0,
+};
+const STICK_R = 60;
+function restStick() {
+  touch.baseX = 100 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sal')) || 0);
+  touch.baseY = innerHeight - 110;
+  const b = $('stickBase');
+  b.style.left = touch.baseX + 'px'; b.style.top = touch.baseY + 'px';
+  b.classList.remove('active');
+  $('stickKnob').style.transform = 'translate(0px, 0px)';
+}
+function enableTouch() {
+  if (touch.on) return;
+  touch.on = true;
+  document.body.classList.add('touch');
+  // talk about taps instead of keys and buttons
+  document.querySelector('#title .start').innerHTML = 'Tap anywhere to begin… if you dare';
+  document.querySelector('#paused .start').innerHTML = 'Tap <b>Resume</b> to carry on';
+  document.querySelector('#gameover .start').innerHTML = 'Tap to try again';
+  document.querySelector('#win .start').innerHTML = 'Tap to play again';
+  restStick();
+  $('touch').classList.toggle('hidden', state !== 'playing');
+}
+{
+  if (LOW_POWER) queueMicrotask(enableTouch);   // after the rest of the game has loaded
+  addEventListener('touchstart', () => { enableTouch(); if (!audio.ok) audio.init(); }, { passive: true });
+  addEventListener('touchend', () => { if (!audio.ok) audio.init(); }, { passive: true });   // iOS unlocks audio on touchend
+  addEventListener('resize', () => { if (touch.on && touch.stickId === null) restStick(); });
+
+  const layer = $('touch');
+  layer.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.tbtn')) return;
+    e.preventDefault();
+    if (e.clientX < innerWidth * 0.45 && touch.stickId === null) {
+      touch.stickId = e.pointerId;
+      touch.baseX = e.clientX; touch.baseY = e.clientY;
+      const b = $('stickBase');
+      b.style.left = e.clientX + 'px'; b.style.top = e.clientY + 'px';
+      b.classList.add('active');
+    } else if (touch.lookId === null) {
+      touch.lookId = e.pointerId; touch.lookX = e.clientX; touch.lookY = e.clientY;
+    }
+  });
+  layer.addEventListener('pointermove', (e) => {
+    if (e.pointerId === touch.stickId) {
+      let dx = e.clientX - touch.baseX, dy = e.clientY - touch.baseY;
+      const d = Math.hypot(dx, dy);
+      if (d > STICK_R) { dx *= STICK_R / d; dy *= STICK_R / d; }
+      $('stickKnob').style.transform = `translate(${dx}px, ${dy}px)`;
+      touch.mx = dx / STICK_R; touch.my = -dy / STICK_R;
+    } else if (e.pointerId === touch.lookId) {
+      touch.lookDX += e.clientX - touch.lookX; touch.lookDY += e.clientY - touch.lookY;
+      touch.lookX = e.clientX; touch.lookY = e.clientY;
+    }
+  });
+  const release = (e) => {
+    if (e.pointerId === touch.stickId) { touch.stickId = null; touch.mx = touch.my = 0; restStick(); }
+    if (e.pointerId === touch.lookId) touch.lookId = null;
+  };
+  layer.addEventListener('pointerup', release);
+  layer.addEventListener('pointercancel', release);
+
+  const button = (id, down, up) => {
+    const b = $(id);
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); b.classList.add('down'); down(); });
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { b.classList.remove('down'); if (up) up(); });
+  };
+  button('tFlash', () => { touch.flash = true; });
+  button('tSwing', () => { touch.swing = true; });
+  button('tSprint', () => { touch.sprint = true; }, () => { touch.sprint = false; });
+  button('tUse', () => { touch.use = true; });
+  button('tPause', () => { touch.pause = true; });
+}
 addEventListener('mousedown', (e) => {
   if (!audio.ok) audio.init();
   if (e.target.closest && e.target.closest('button, input, #settings, #jukebox')) return;
@@ -2826,6 +2910,17 @@ function readInput() {
   if (keyEdges.has('KeyJ')) inp.jukebox = true;
   const len = Math.hypot(inp.mx, inp.my);
   if (len > 1) { inp.mx /= len; inp.my /= len; }
+  if (touch.on) {
+    inp.mx = clamp(inp.mx + touch.mx, -1, 1); inp.my = clamp(inp.my + touch.my, -1, 1);
+    if (touch.sprint) inp.sprint = true;
+    if (touch.flash) inp.flash = true;
+    if (touch.swing) inp.swing = true;
+    if (touch.use) inp.action = true;
+    if (touch.pause) inp.pause = true;
+    mouseDX += touch.lookDX * 2.2; mouseDY += touch.lookDY * 2.2;   // drag to look
+    touch.lookDX = touch.lookDY = 0;
+    touch.flash = touch.swing = touch.use = touch.pause = false;
+  }
   inp.mouseDX = mouseDX; inp.mouseDY = mouseDY;
   mouseDX = mouseDY = 0; mouseClicked = mouseSwing = false; keyEdges.clear();
   return inp;
@@ -2891,6 +2986,8 @@ function setState(s) {
   if (s === 'paused') $('paused').classList.remove('hidden');
   if (s === 'settings') $('settings').classList.remove('hidden');
   if (s === 'jukebox') $('jukebox').classList.remove('hidden');
+  $('touch').classList.toggle('hidden', !(touch.on && s === 'playing'));
+  if (s !== 'playing') { touch.sprint = false; touch.mx = touch.my = 0; touch.stickId = touch.lookId = null; if (touch.on) restStick(); }
   if (s === 'gameover') $('gameover').classList.remove('hidden');
   if (s === 'won') $('win').classList.remove('hidden');
   if (s !== 'playing') $('prompt').classList.add('hidden');
@@ -2929,6 +3026,10 @@ function setObjective() {
 
 function startGame() {
   audio.init();
+  if (touch.on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
+    // full screen + landscape where the browser allows it (Android); iPhone Safari doesn't
+    document.documentElement.requestFullscreen().then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
+  }
   resetGame();
   setState('playing');
   setObjective();
@@ -3729,7 +3830,7 @@ function updatePickups() {
     pr.classList.remove('hidden');
     return false;
   }
-  if (canBanish) { pr.textContent = 'Press A / E to drop the candy into the cauldron'; pr.classList.remove('hidden'); }
+  if (canBanish) { pr.textContent = touch.on ? 'Tap ✋ to drop the candy into the cauldron' : 'Press A / E to drop the candy into the cauldron'; pr.classList.remove('hidden'); }
   else pr.classList.add('hidden');
   return canBanish;
 }
@@ -3927,6 +4028,7 @@ function updateWorld(dt, t) {
 
 function updateHUD(dt) {
   $('candyCount').textContent = G.candies;
+  if (touch.on) $('tUse').classList.toggle('hidden', state !== 'playing' || !(G.candies >= CFG.candyCount && Math.hypot(G.pos.x, G.pos.z) < 3.2));
   const bat = $('battery');
   bat.style.width = `${G.battery * 100}%`;
   bat.style.background = G.battery < 0.2 ? '#ff3b2f' : G.battery < 0.45 ? '#ffb02f' : '#ffe39a';

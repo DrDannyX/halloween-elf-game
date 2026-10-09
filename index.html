@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>Elf on the Shelf: Hollow Hill</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
@@ -24,6 +26,15 @@
   <div id="prompt" class="hidden"></div>
   <div id="toast"></div>
   <div id="nowplaying"></div>
+  <div id="touch" class="hidden">
+    <div id="stickBase"><div id="stickKnob"></div></div>
+    <button type="button" class="tbtn" id="tSwing" aria-label="Swing flashlight">💥</button>
+    <button type="button" class="tbtn" id="tFlash" aria-label="Flashlight on or off">🔦</button>
+    <button type="button" class="tbtn" id="tSprint" aria-label="Sprint (hold)">🏃</button>
+    <button type="button" class="tbtn hidden" id="tUse" aria-label="Use the cauldron">✋</button>
+    <button type="button" class="tbtn" id="tPause" aria-label="Pause">❚❚</button>
+  </div>
+  <div id="rotate">Turn your phone sideways for the best view</div>
   <div id="padstatus">🎮 No controller found. Press any button on it to connect</div>
 
   <div class="overlay" id="title">
@@ -63,6 +74,10 @@
             <li><b>P</b> Pause</li>
           </ul></div>
       </div>
+      <div class="touch-help">
+        <p><b>Left thumb</b> move · <b>Right thumb</b> drag to look</p>
+        <p>🔦 flashlight · 💥 swing · 🏃 hold to sprint · ✋ use cauldron · ❚❚ pause</p>
+      </div>
       <p class="start blink">Press <b>A</b> or <b>Enter</b> to begin… if you dare</p>
       <p><button type="button" class="menu-btn" id="openSettingsTitle">⚙ Settings</button> <span class="hint">X / O</span>
         &nbsp; <button type="button" class="menu-btn" id="openJukebox">♪ Music</button> <span class="hint">LB / J</span></p>
@@ -76,7 +91,8 @@
       <p class="story">He's still out there. Waiting.</p>
       <div id="pauseControls"></div>
       <p class="start">Press <b>Start</b> / <b>A</b> / <b>Enter</b> to resume</p>
-      <p><button type="button" class="menu-btn" id="openSettingsPause">⚙ Settings</button> <span class="hint">X / O</span></p>
+      <p><button type="button" class="menu-btn" id="resumeBtn">▶ Resume</button>
+        &nbsp; <button type="button" class="menu-btn" id="openSettingsPause">⚙ Settings</button> <span class="hint">X / O</span></p>
     </div>
   </div>
 

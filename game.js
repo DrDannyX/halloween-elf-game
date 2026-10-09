@@ -20,6 +20,7 @@ const CFG = {
   safeRadius: 4.6,      // nothing evil can enter the cauldron's glow
   catchDist: 0.95,
   lookSpeed: 2.8,
+  elfLurkRadius: 12,   // how close you must wander before a lurking elf notices you (+1.2 per candy)
   ghostCount: 4,
   skeletonCount: 6,
   damage: { ghost: 20, skeleton: 15, spider: 15 },
@@ -62,7 +63,7 @@ $('game').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const FOG_COLOR = new THREE.Color(0x0d0a18);
 scene.background = FOG_COLOR.clone();
-scene.fog = new THREE.FogExp2(FOG_COLOR, 0.04);
+scene.fog = new THREE.FogExp2(FOG_COLOR, 0.05);
 
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 600);
 camera.position.set(0, 5, 14);
@@ -326,18 +327,18 @@ const UP = new THREE.Vector3(0, 1, 0);
 
 // Autumn leaves: alpha-tested quads with per-leaf colors, clustered around branch tips.
 const LEAF_COLORS = [0xd0601a, 0xe07a18, 0xb03a16, 0x8e2418, 0xc09a2a, 0x7a5222, 0xc8401a].map((c) => new THREE.Color(c));
-function makeLeafGeo(tips, perTip, size) {
+function makeLeafGeo(tips, perTip, size, palette = LEAF_COLORS, spread = 0.45) {
   const pos = [], nor = [], uv = [], col = [];
   const q = new THREE.Quaternion(), e = new THREE.Euler(), n = new THREE.Vector3();
   const corners = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]];
   for (const { end, dir } of tips) {
     for (let k = 0; k < perTip; k++) {
       const c = end.clone().addScaledVector(dir, rand(-0.2, 0.35))
-        .add(new THREE.Vector3(rand(-0.45, 0.45), rand(-0.25, 0.35), rand(-0.45, 0.45)));
+        .add(new THREE.Vector3(rand(-spread, spread), rand(-spread * 0.55, spread * 0.75), rand(-spread, spread)));
       q.setFromEuler(e.set(rand(0, 6.3), rand(0, 6.3), rand(0, 6.3)));
       n.set(0, 0, 1).applyQuaternion(q).add(new THREE.Vector3(0, 0.6, 0)).normalize();
       const sz = size * rand(0.7, 1.3);
-      const color = LEAF_COLORS[(rng() * LEAF_COLORS.length) | 0].clone().multiplyScalar(rand(0.75, 1.25));
+      const color = palette[(rng() * palette.length) | 0].clone().multiplyScalar(rand(0.75, 1.25));
       for (const [u, v] of corners) {
         const p = new THREE.Vector3(u * sz, v * sz, 0).applyQuaternion(q).add(c);
         pos.push(p.x, p.y, p.z); nor.push(n.x, n.y, n.z); uv.push(u + 0.5, v + 0.5); col.push(color.r, color.g, color.b);
@@ -353,7 +354,32 @@ function makeLeafGeo(tips, perTip, size) {
   return g;
 }
 
-function makeTreeGeo(depth = 4, height = [3.2, 5.5], leafDensity = 7) {
+const BUSH_COLORS = [0x2e3a16, 0x3d4a1a, 0x4a3a14, 0x6e2a12, 0x8a3412, 0x2a3018, 0x5a5a1e, 0x7a1e14].map((c) => new THREE.Color(c));
+function makeBushGeo(size) {
+  const geos = [], tips = [];
+  const stems = 6 + ((rng() * 4) | 0);
+  for (let i = 0; i < stems; i++) {
+    const a = rand(0, Math.PI * 2), lean = rand(0.3, 0.9);
+    const dir = new THREE.Vector3(Math.cos(a) * lean, 1, Math.sin(a) * lean).normalize();
+    const len = size * rand(0.6, 1.0);
+    const g = new THREE.CylinderGeometry(0.015, 0.035, len, 4, 1, true);
+    g.translate(0, len / 2, 0);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, dir));
+    g.translate(0, -0.1, 0);
+    geos.push(g);
+    const end = dir.clone().multiplyScalar(len).add(new THREE.Vector3(0, -0.1, 0));
+    tips.push({ end, dir });
+    tips.push({ end: end.clone().multiplyScalar(0.6), dir: new THREE.Vector3(Math.cos(a + 1), 0.5, Math.sin(a + 1)).normalize() });
+  }
+  // fill out a rounded mound of foliage
+  for (let k = 0; k < 16; k++) {
+    const a = rand(0, Math.PI * 2), r = Math.sqrt(rng()) * size * 0.8;
+    tips.push({ end: new THREE.Vector3(Math.cos(a) * r, rand(0.25, 0.95) * size * (1 - (r / size) * 0.5), Math.sin(a) * r), dir: UP });
+  }
+  return { bark: mergeGeos(geos), leaves: makeLeafGeo(tips, 8, 0.32, BUSH_COLORS, 0.35), r: size * 0.75, h: size };
+}
+
+function makeTreeGeo(depth = 4, height = [3.2, 5.5], leafDensity = 7, radius = [0.2, 0.5]) {
   const geos = [];
   const tips = [];
   function branch(start, dir, len, rad, depth) {
@@ -375,17 +401,19 @@ function makeTreeGeo(depth = 4, height = [3.2, 5.5], leafDensity = 7) {
     }
   }
   const h = rand(height[0], height[1]);
-  branch(new THREE.Vector3(0, -0.3, 0), new THREE.Vector3(rand(-0.15, 0.15), 1, rand(-0.15, 0.15)).normalize(), h, rand(0.26, 0.42), depth);
+  const trunkR = rand(radius[0], radius[1]);
+  branch(new THREE.Vector3(0, -0.3, 0), new THREE.Vector3(rand(-0.15, 0.15), 1, rand(-0.15, 0.15)).normalize(), h, trunkR, depth);
   for (let k = 0; k < 4; k++) {
     const a = (k / 4) * Math.PI * 2 + rand(-0.4, 0.4);
     const d = new THREE.Vector3(Math.cos(a), -0.35, Math.sin(a)).normalize();
-    const g = new THREE.CylinderGeometry(0.03, 0.16, 1.4, 5, 1, true);
+    const rs = trunkR / 0.34;  // roots flare out more on thick trunks
+    const g = new THREE.CylinderGeometry(0.03 * rs, 0.16 * rs, 1.4 * Math.sqrt(rs), 5, 1, true);
     g.translate(0, 0.7, 0);
     g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, d));
     g.translate(0, 0.35, 0);
     geos.push(g);
   }
-  return { bark: mergeGeos(geos), leaves: makeLeafGeo(tips, leafDensity, 0.42) };
+  return { bark: mergeGeos(geos), leaves: makeLeafGeo(tips, leafDensity, 0.42), r: trunkR };
 }
 
 function makeGraveGeo(type) {
@@ -635,7 +663,7 @@ function clearPath(a, b) {
 }
 
 const mistLayers = [];
-for (const [y, op, sp] of [[0.45, 0.22, 0.6], [1.0, 0.12, -0.4], [1.7, 0.06, 0.3]]) {
+for (const [y, op, sp] of [[0.45, 0.32, 0.6], [1.0, 0.2, -0.4], [1.7, 0.12, 0.3], [2.6, 0.07, -0.2]]) {
   const t = mistTex.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 6);
   const m = new THREE.Mesh(terrainGeo(140, 90, y, true), new THREE.MeshBasicMaterial({
     map: t, color: 0x8478a4, transparent: true, opacity: op, depthWrite: false, vertexColors: true,
@@ -651,7 +679,7 @@ for (const [y, op, sp] of [[0.45, 0.22, 0.6], [1.0, 0.12, -0.4], [1.7, 0.06, 0.3
 const stoneMat = new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.95, color: 0xb8b4c0 });
 const wind = { uTime: { value: 0 }, uWind: { value: 1 } };
 // Sway grows with height up the tree; leaves also flutter on their own.
-function addWind(mat, leaf) {
+function addWind(mat, leaf, bendK = 0.0045) {
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = wind.uTime;
     shader.uniforms.uWind = wind.uWind;
@@ -663,13 +691,13 @@ function addWind(mat, leaf) {
       windOrigin = modelMatrix * windOrigin;
       float ph = dot(windOrigin.xz, vec2(0.13, 0.17));
       float hgt = max(transformed.y, 0.0);
-      float bend = hgt * hgt * 0.0045 * uWind;
+      float bend = hgt * hgt * ${bendK.toFixed(4)} * uWind;
       transformed.x += bend * (sin(uTime * 1.3 + ph) + 0.4 * sin(uTime * 2.9 + ph * 1.7));
       transformed.z += bend * 0.6 * cos(uTime * 1.1 + ph);
-      ${leaf ? `float fl = 0.05 * uWind * min(1.0, hgt / 3.0);
+      ${leaf ? `float fl = ${(bendK > 0.01 ? 0.07 : 0.05).toFixed(3)} * uWind * min(1.0, hgt / ${bendK > 0.01 ? '1.0' : '3.0'});
       transformed += fl * vec3(sin(uTime * 7.0 + position.x * 5.0 + ph), sin(uTime * 9.0 + position.z * 6.0), cos(uTime * 8.0 + position.y * 4.0 + ph));` : ''}`);
   };
-  mat.customProgramCacheKey = () => (leaf ? 'wind-leaf' : 'wind-bark') + mat.type;
+  mat.customProgramCacheKey = () => (leaf ? 'wind-leaf' : 'wind-bark') + mat.type + bendK;
   return mat;
 }
 const leafTex = canvasTex(64, 64, (g, w, h) => {
@@ -685,6 +713,8 @@ const barkMat = addWind(new THREE.MeshStandardMaterial({ map: barkTex, roughness
 const leafMat = addWind(new THREE.MeshStandardMaterial({ map: leafTex, alphaTest: 0.5, side: THREE.DoubleSide, vertexColors: true, roughness: 0.85 }), true);
 const barkDepthMat = addWind(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), false);
 const leafDepthMat = addWind(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: leafTex, alphaTest: 0.5 }), true);
+const bushStemMat = addWind(new THREE.MeshStandardMaterial({ color: 0x1e1610, roughness: 1 }), false, 0.07);
+const bushLeafMat = addWind(new THREE.MeshStandardMaterial({ map: leafTex, alphaTest: 0.5, side: THREE.DoubleSide, vertexColors: true, roughness: 0.9 }), true, 0.07);
 function treeMeshes(geo, count) {
   const bark = count ? new THREE.InstancedMesh(geo.bark, barkMat, count) : new THREE.Mesh(geo.bark, barkMat);
   const leaves = count ? new THREE.InstancedMesh(geo.leaves, leafMat, count) : new THREE.Mesh(geo.leaves, leafMat);
@@ -1024,22 +1054,41 @@ const graveSpots = [];
 
 // ---- dead trees ----
 {
-  const treeGeos = Array.from({ length: 10 }, () => makeTreeGeo());
+  // a few huge, gnarled old trees
+  const giantGeos = Array.from({ length: 4 }, () => makeTreeGeo(5, [8, 11], 6, [0.8, 1.15]));
+  for (let i = 0, tries = 0; i < 10 && tries < 600; tries++) {
+    const a = rand(0, Math.PI * 2), r = rand(14, CFG.worldRadius - 5);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (!isFree(x, z, 4, { minCenter: 12 })) continue;
+    const geo = giantGeos[i % giantGeos.length];
+    const { bark: t, leaves } = treeMeshes(geo);
+    t.add(leaves);
+    const sc = rand(0.95, 1.2);
+    t.scale.set(sc, sc * rand(0.95, 1.1), sc);
+    t.position.set(x, heightAt(x, z) - 0.2, z);
+    t.rotation.y = rand(0, Math.PI * 2);
+    scene.add(t);
+    occluders.push(t);
+    addCircle(x, z, geo.r * sc + 0.15, 14);
+    i++;
+  }
+  const treeGeos = Array.from({ length: 10 }, (_, i) => makeTreeGeo(4, [3.2, 6], 7, i < 3 ? [0.14, 0.24] : i < 7 ? [0.25, 0.42] : [0.45, 0.65]));
   let placed = 0;
   for (let tries = 0; placed < 55 && tries < 2000; tries++) {
     const a = rand(0, Math.PI * 2), r = Math.sqrt(rng()) * (CFG.worldRadius - 2);
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (!isFree(x, z, 2.2, { minCenter: 9 })) continue;
-    const { bark: t, leaves } = treeMeshes(treeGeos[placed % treeGeos.length]);
+    const geo = treeGeos[placed % treeGeos.length];
+    const { bark: t, leaves } = treeMeshes(geo);
     t.add(leaves);
-    const s = rand(0.9, 1.6);
-    t.scale.set(s, s * rand(0.9, 1.2), s);
+    const s = rand(0.85, 1.5);
+    t.scale.set(s, s * rand(0.85, 1.25), s);
     t.position.set(x, heightAt(x, z) - 0.1, z);
     t.rotation.y = rand(0, Math.PI * 2);
     t.castShadow = true;
     scene.add(t);
     occluders.push(t);
-    addCircle(x, z, 0.45 * s, 8);
+    addCircle(x, z, geo.r * s + 0.1, 8);
     placed++;
   }
   for (let i = 0; i < 70; i++) {
@@ -1058,7 +1107,7 @@ const graveSpots = [];
 // ---- dense forest patches (instanced so hundreds of trees stay cheap) ----
 const FORESTS = [[-44, -21, 9], [14, -42, 8.5], [45, -7, 7.5], [-27, 41, 8.5], [25, 41, 8.5], [-8, -24, 6]];
 {
-  const geos = Array.from({ length: 6 }, () => makeTreeGeo(3, [5, 8], 9));
+  const geos = Array.from({ length: 6 }, (_, i) => makeTreeGeo(3, [5, 8.5], 9, [[0.15, 0.22], [0.22, 0.32], [0.3, 0.42], [0.4, 0.55], [0.18, 0.3], [0.55, 0.75]][i]));
   const placements = geos.map(() => []);
   const bushes = [], shrooms = [];
   for (const [fx, fz, fr] of FORESTS) {
@@ -1066,10 +1115,10 @@ const FORESTS = [[-44, -21, 9], [14, -42, 8.5], [45, -7, 7.5], [-27, 41, 8.5], [
     for (let tries = 0; tries < 1500 && placed < 75; tries++) {
       const a = rand(0, Math.PI * 2), r = Math.sqrt(rng()) * fr;
       const x = fx + Math.cos(a) * r, z = fz + Math.sin(a) * r;
-      const sc = rand(0.8, 1.4);
+      const sc = rand(0.75, 1.45);
       if (!isFree(x, z, 0.75, { minCenter: 8 })) continue;
       placements[placed % geos.length].push({ x, z, s: sc, rot: rand(0, Math.PI * 2) });
-      addCircle(x, z, 0.38 * sc, 9);
+      addCircle(x, z, geos[placed % geos.length].r * sc + 0.08, 9);
       placed++;
     }
     for (let i = 0; i < 40; i++) {
@@ -1116,6 +1165,57 @@ const FORESTS = [[-44, -21, 9], [14, -42, 8.5], [45, -7, 7.5], [-27, 41, 8.5], [
     caps.setMatrixAt(i, m); stems.setMatrixAt(i, m);
   });
   scene.add(caps, stems);
+}
+
+// ---- thickets of leafy bushes that sway in the wind ----
+const bushes = [];   // {x, z, y, r, h}: soft, they block sight and slow you down
+{
+  const THICKETS = [[-12, 16, 6], [34, -12, 6], [-38, 8, 6], [6, 28, 6], [40, 22, 6], [-20, -40, 6], [30, -40, 5], [-48, 24, 5], [10, -14, 4.5], [-24, -8, 5]];
+  const geos = Array.from({ length: 6 }, (_, i) => makeBushGeo(0.9 + i * 0.22));
+  const placements = geos.map(() => []);
+  const tryBush = (x, z) => {
+    if (!isFree(x, z, 0.5, { minCenter: 7 })) return false;
+    const gi = (rng() * geos.length) | 0, sc = rand(0.85, 1.35);
+    const r = geos[gi].r * sc;
+    if (bushes.some((b) => Math.hypot(b.x - x, b.z - z) < (b.r + r) * 0.8)) return false;
+    const y = heightAt(x, z);
+    placements[gi].push({ x, z, y, sc, rot: rand(0, Math.PI * 2) });
+    bushes.push({ x, z, y, r, h: geos[gi].h * sc });
+    return true;
+  };
+  for (const [tx, tz, tr] of THICKETS) {
+    for (let k = 0, n = 0; k < 120 && n < 32; k++) {
+      const a = rand(0, Math.PI * 2), r = Math.sqrt(rng()) * tr;
+      if (tryBush(tx + Math.cos(a) * r, tz + Math.sin(a) * r)) n++;
+    }
+  }
+  for (const [fx, fz, fr] of FORESTS) {   // leafy undergrowth in the forests
+    for (let k = 0, n = 0; k < 80 && n < 14; k++) {
+      const a = rand(0, Math.PI * 2), r = Math.sqrt(rng()) * (fr + 2);
+      if (tryBush(fx + Math.cos(a) * r, fz + Math.sin(a) * r)) n++;
+    }
+  }
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  geos.forEach((g, gi) => {
+    const list = placements[gi];
+    if (!list.length) return;
+    const stems = new THREE.InstancedMesh(g.bark, bushStemMat, list.length);
+    const leaves = new THREE.InstancedMesh(g.leaves, bushLeafMat, list.length);
+    list.forEach((p, i) => {
+      q.setFromEuler(e.set(0, p.rot, 0));
+      m.compose(new THREE.Vector3(p.x, p.y - 0.05, p.z), q, new THREE.Vector3(p.sc, p.sc * rand(0.85, 1.15), p.sc));
+      stems.setMatrixAt(i, m); leaves.setMatrixAt(i, m);
+    });
+    stems.computeBoundingSphere(); leaves.computeBoundingSphere();
+    scene.add(stems, leaves);
+  });
+}
+function bushAt(x, z, y, shrink = 1) {
+  for (const b of bushes) {
+    const dx = x - b.x, dz = z - b.z, r = b.r * shrink;
+    if (dx * dx + dz * dz < r * r && y > b.y - 0.2 && y < b.y + b.h) return b;
+  }
+  return null;
 }
 
 // ---- jack-o'-lanterns ----
@@ -1707,6 +1807,35 @@ class AudioEngine {
       n.connect(bp); bp.connect(g); g.connect(out); n.start(t); n.stop(t + 0.06);
     }
   }
+  whoosh() {
+    if (!this.ok) return;
+    const c = this.ctx, t = c.currentTime;
+    const n = this.noise(), f = c.createBiquadFilter(), g = c.createGain();
+    f.type = 'bandpass'; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(2200, t + 0.12); f.frequency.exponentialRampToValueAtTime(700, t + 0.25);
+    this.env(g, t, 0.35, 0.05, 0.2);
+    n.connect(f); f.connect(g); g.connect(this.master); n.start(t); n.stop(t + 0.3);
+  }
+  bonk(vol, pan) {
+    if (!this.ok) return;
+    const c = this.ctx, t = c.currentTime, out = this.panned(vol, pan);
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+    this.env(g, t, 0.9, 0.002, 0.15);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.2);
+    const n = this.noise(), f = c.createBiquadFilter(), ng = c.createGain();
+    f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 3;
+    this.env(ng, t, 1.2, 0.001, 0.06);
+    n.connect(f); f.connect(ng); ng.connect(out); n.start(t); n.stop(t + 0.1);
+  }
+  rustle(vol) {
+    if (!this.ok) return;
+    const c = this.ctx, t = c.currentTime;
+    const n = this.noise(), f = c.createBiquadFilter(), g = c.createGain();
+    f.type = 'bandpass'; f.frequency.value = rrand(2200, 4200); f.Q.value = 0.8;
+    this.env(g, t, vol, 0.03, rrand(0.15, 0.3));
+    n.connect(f); f.connect(g); g.connect(this.master); n.start(t); n.stop(t + 0.4);
+  }
   hiss(vol, pan) {
     if (!this.ok) return;
     const c = this.ctx, t = c.currentTime, out = this.panned(vol, pan);
@@ -1920,7 +2049,7 @@ class ParticlePool {
   }
 }
 const glowFx = new ParticlePool(5000, glowTex, true, 6);
-const smokeFx = new ParticlePool(1000, puffTex, false, 3);
+const smokeFx = new ParticlePool(1400, puffTex, false, 3);
 
 const fxAcc = {};
 function every(key, rate, dt, fn) {
@@ -2024,7 +2153,7 @@ function updateParticles(dt, t) {
   // fog breathes slowly, and thickens in the forests
   let inForest = 0;
   for (const [fx, fz, fr] of FORESTS) inForest = Math.max(inForest, 1 - smoothstep(fr * 0.6, fr + 6, Math.hypot(centre.x - fx, centre.z - fz)));
-  scene.fog.density = 0.04 + 0.007 * Math.sin(t * 0.05) + inForest * 0.022;
+  scene.fog.density = 0.05 + 0.009 * Math.sin(t * 0.05) + inForest * 0.025;
   particleFog.value = scene.fog.density;
 
   // rolling fog banks
@@ -2034,7 +2163,7 @@ function updateParticles(dt, t) {
     fogCount++;
     if (Math.hypot(p.x - centre.x, p.z - centre.z) > 36 && p.life < p.max - 3) p.life = p.max - 3;
   }
-  const fogTarget = 80 + Math.round(inForest * 60);
+  const fogTarget = 120 + Math.round(inForest * 60);
   for (let k = 0; k < 3 && fogCount < fogTarget; k++, fogCount++) {
     const a = Math.random() * Math.PI * 2, r = rrand(3, 32);
     const x = centre.x + Math.cos(a) * r, z = centre.z + Math.sin(a) * r;
@@ -2042,7 +2171,7 @@ function updateParticles(dt, t) {
     const gy = heightAt(x, z), size = rrand(7, 14);
     smokeFx.emit({
       x, y: gy + size * 0.22, z, vx: rrand(-0.15, 0.15), vz: rrand(-0.15, 0.15), life: rrand(16, 26),
-      r: 0.46, g: 0.43, b: 0.6, a: rrand(0.09, 0.16) * (1 + inForest * 0.6), size, size1: size * 1.2,
+      r: 0.46, g: 0.43, b: 0.6, a: rrand(0.12, 0.2) * (1 + inForest * 0.5), size, size1: size * 1.2,
       wind: 0.35, fadeIn: 4, ground: gy, tag: 1, vr: rrand(-0.03, 0.03),
     });
   }
@@ -2157,7 +2286,7 @@ function updateParticles(dt, t) {
 // ============================================================================
 const keys = {};
 const keyEdges = new Set();
-let mouseDX = 0, mouseDY = 0, mouseClicked = false;
+let mouseDX = 0, mouseDY = 0, mouseClicked = false, mouseSwing = false;
 addEventListener('keydown', (e) => {
   if (!keys[e.code]) keyEdges.add(e.code);
   keys[e.code] = true;
@@ -2175,7 +2304,8 @@ addEventListener('mousedown', (e) => {
   if (state === 'title' || ((state === 'gameover' || state === 'won') && stateTime > 0.8)) { startGame(); lockPointer(); }
   else if (state === 'playing') {
     if (!document.pointerLockElement) lockPointer();
-    else if (e.button === 0 || e.button === 2) mouseClicked = true;
+    else if (e.button === 0) mouseSwing = true;
+    else if (e.button === 2) mouseClicked = true;
   }
 });
 addEventListener('contextmenu', (e) => e.preventDefault());
@@ -2200,7 +2330,7 @@ function updatePadStatus(gp) {
 const deadzone = (v, dz = 0.15) => (Math.abs(v) < dz ? 0 : Math.sign(v) * ((Math.abs(v) - dz) / (1 - dz)));
 
 function readInput() {
-  const inp = { mx: 0, my: 0, lx: 0, ly: 0, sprint: false, flash: false, action: false, pause: false };
+  const inp = { mx: 0, my: 0, lx: 0, ly: 0, sprint: false, flash: false, swing: false, action: false, pause: false };
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   let gp = null;
   for (const p of pads) if (p && p.connected) { gp = p; break; }
@@ -2218,7 +2348,8 @@ function readInput() {
     if (b(14)) inp.mx -= 1;
     if (b(15)) inp.mx += 1;
     inp.sprint = b(6) || b(1) || b(10);
-    inp.flash = edge(7) || edge(5) || edge(2);
+    inp.flash = edge(7) || edge(5);
+    inp.swing = edge(2);
     inp.action = edge(0);
     inp.pause = edge(9) || edge(8);
     if (!audio.ok && gp.buttons.some((x) => x.pressed)) audio.init();
@@ -2230,12 +2361,13 @@ function readInput() {
   if (keys.KeyA || keys.ArrowLeft) inp.mx -= 1;
   if (keys.ShiftLeft || keys.ShiftRight) inp.sprint = true;
   if (keyEdges.has('KeyF') || mouseClicked) inp.flash = true;
+  if (keyEdges.has('KeyQ') || mouseSwing) inp.swing = true;
   if (keyEdges.has('Enter') || keyEdges.has('Space') || keyEdges.has('KeyE')) inp.action = true;
   if (keyEdges.has('KeyP') || keyEdges.has('Escape')) inp.pause = true;
   const len = Math.hypot(inp.mx, inp.my);
   if (len > 1) { inp.mx /= len; inp.my /= len; }
   inp.mouseDX = mouseDX; inp.mouseDY = mouseDY;
-  mouseDX = mouseDY = 0; mouseClicked = false; keyEdges.clear();
+  mouseDX = mouseDY = 0; mouseClicked = mouseSwing = false; keyEdges.clear();
   return inp;
 }
 
@@ -2265,10 +2397,13 @@ function resetGame() {
     elf: { pos: new THREE.Vector3(-14, heightAt(-14, -12), -12), vy: 0 },
     elfYaw: 0, elfMoving: false, elfWalk: 0, elfTarget: null, elfRepath: 0,
     elfSeen: false, elfUnseenFar: 0, elfJingleT: 0, elfGiggleT: 8, elfSnapT: 4,
-    elfTilt: 0, elfReach: 0, elfStuckT: 0, glare: 0,
+    elfTilt: 0, elfReach: 0, elfStuckT: 0, glare: 0, elfMode: 'lurk', elfLostT: 0,
+    swingT: 1, swingCd: 0,
     heartT: 0, prox: 0, shake: 0, banishT: 0, caughtBy: null,
   });
   G.elfPos = G.elf.pos;
+  relocateElf(28);
+  clearBoneDebris();
   cauldron.beam.visible = false;
   elf.root.visible = true;
   elf.root.scale.setScalar(1);
@@ -2276,6 +2411,7 @@ function resetGame() {
   ghosts.forEach((g) => { g.state = 'gone'; g.timer = rrand(4, 14); g.root.visible = false; g.alpha = 0; });
   skeletons.forEach((s) => {
     s.state = 'buried'; s.root.visible = false; s.timer = 0; s.rattleT = 0; s.walk = 0; s.vy = 0;
+    s.hp = 3; s.stagger = 0; s.knock = new THREE.Vector3(); s.deadT = 0;
     s.pos.set(s.home.x, heightAt(s.home.x, s.home.z) - 1.9, s.home.z);
   });
   spiders.forEach((s) => {
@@ -2349,7 +2485,14 @@ function lineOfSight(p, from = camera.position) {
   raycaster.set(from, _los.normalize());
   raycaster.far = d - 0.3;
   if (raycaster.intersectObjects(occluders, false).length) return false;
-  return !terrainBlocks(from, p);
+  if (terrainBlocks(from, p)) return false;
+  // dense bushes hide what's behind them (but not the bush you're standing in)
+  for (let i = 1; i < 16; i++) {
+    const t = i / 16, x = lerp(from.x, p.x, t), y = lerp(from.y, p.y, t), z = lerp(from.z, p.z, t);
+    const b = bushAt(x, z, y, 0.8);
+    if (b && Math.hypot(G.pos.x - b.x, G.pos.z - b.z) > b.r && Math.hypot(p.x - b.x, p.z - b.z) > b.r * 0.5) return false;
+  }
+  return true;
 }
 
 const _fl = new THREE.Vector3(), _fl2 = new THREE.Vector3();
@@ -2407,7 +2550,10 @@ function updatePlayer(dt, inp) {
   const mag = Math.hypot(mvx, mvz);
   const sprinting = inp.sprint && mag > 0.2 && G.stamina > 0;
   G.stamina = clamp(G.stamina + (sprinting ? -CFG.staminaDrain : CFG.staminaRegen * (mag > 0.1 ? 0.6 : 1)) * dt, 0, 100);
-  const speed = (sprinting ? CFG.sprintSpeed : CFG.walkSpeed) * mag;
+  const inBush = bushAt(G.pos.x, G.pos.z, G.pos.y + 0.5, 0.9);
+  const speed = (sprinting ? CFG.sprintSpeed : CFG.walkSpeed) * mag * (inBush ? 0.65 : 1);
+  G.rustleT = (G.rustleT || 0) - dt;
+  if (inBush && mag > 0.2 && G.rustleT <= 0) { G.rustleT = rrand(0.25, 0.4); audio.rustle(0.5); }
   if (mag > 0.01) {
     G.pos.x += (mvx / mag) * speed * dt;
     G.pos.z += (mvz / mag) * speed * dt;
@@ -2442,7 +2588,18 @@ function updatePlayer(dt, inp) {
   const sw = Math.sin(G.walkPhase) * 0.7 * G.moving;
   player.legs[0].rotation.x = sw; player.legs[1].rotation.x = -sw;
   player.arms[0].rotation.x = -sw * 0.6;
-  player.arms[1].rotation.x = -1.2 + G.pitch * 0.4;
+  G.swingCd -= dt;
+  if (inp.swing && G.swingCd <= 0) {
+    G.swingCd = 0.5; G.swingT = 0;
+    G.facing = Math.atan2(fx, fz);
+    audio.whoosh();
+    swingHit(fx, fz);
+  }
+  G.swingT = Math.min(1, G.swingT + dt / 0.32);
+  if (G.swingT < 1) {
+    const k = 1 - Math.pow(1 - G.swingT, 3);
+    player.arms[1].rotation.set(lerp(-2.9, -0.5, k), 0, lerp(-0.9, 0.7, k));
+  } else player.arms[1].rotation.set(-1.2 + G.pitch * 0.4, 0, 0);
   player.body.position.y = Math.abs(Math.cos(G.walkPhase)) * 0.06 * G.moving;
 
   if (inp.flash) {
@@ -2456,7 +2613,7 @@ function updatePlayer(dt, inp) {
   G.flicker -= dt;
   G.flickerCooldown -= dt;
   const elfDist = G.elfPos.distanceTo(G.pos);
-  if (G.flashOn && G.flickerCooldown <= 0 && (elfDist < 14 || G.battery < 0.15) && G.time > CFG.elfGraceTime) {
+  if (G.flashOn && G.flickerCooldown <= 0 && G.glare <= 0 && (elfDist < 14 || G.battery < 0.15) && G.time > CFG.elfGraceTime) {
     G.flicker = rrand(0.12, 0.35);
     G.flickerCooldown = rrand(1.6, 4.5) * (G.battery < 0.15 ? 0.6 : 1);
   }
@@ -2542,6 +2699,45 @@ function teleportElf() {
   }
 }
 
+// Send the elf off to lurk somewhere random and far away: a thicket, a forest, a house, the open.
+function relocateElf(minDist = 30) {
+  for (let k = 0; k < 120; k++) {
+    const roll = Math.random();
+    let x, y, z;
+    if (roll < 0.35 && bushes.length) { const b = pick(bushes); x = b.x; z = b.z; y = b.y; }
+    else if (roll < 0.6) {
+      const [fx, fz, fr] = pick(FORESTS), a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * fr;
+      x = fx + Math.cos(a) * r; z = fz + Math.sin(a) * r; y = heightAt(x, z);
+    } else if (roll < 0.72) {
+      const h = pick(houses), reg = h.region, ho = h.hole;
+      x = rrand(reg.minX, reg.maxX); z = rrand(reg.minZ, reg.maxZ); y = h.f2;
+      if (x > ho.minX && x < ho.maxX && z > ho.minZ && z < ho.maxZ) continue;
+    } else {
+      const a = Math.random() * Math.PI * 2, r = rrand(8, CFG.worldRadius - 3);
+      x = Math.cos(a) * r; z = Math.sin(a) * r; y = heightAt(x, z);
+      if (inHouseFootprint(x, z, 1)) continue;
+    }
+    if (blockedAt(x, z, y, 0.4)) continue;
+    if (Math.hypot(x - G.pos.x, z - G.pos.z) < minDist || Math.hypot(x, z) < CFG.safeRadius + 4) continue;
+    if (onScreen(_tp.set(x, y + 1, z), 1.1) && lineOfSight(_tp)) continue;
+    G.elfPos.set(x, y, z);
+    G.elf.vy = 0; G.elfStuckT = 0; G.elfTarget = null; G.elfLostT = 0;
+    return;
+  }
+  // fallback: the far side of the map from you
+  const a = Math.atan2(-G.pos.z, -G.pos.x) + rrand(-0.5, 0.5), x = Math.cos(a) * 42, z = Math.sin(a) * 42;
+  G.elfPos.set(x, heightAt(x, z), z);
+}
+
+function wakeElf(finale) {
+  G.elfMode = 'hunt';
+  G.elfLostT = 0; G.elfGiggleT = rrand(5, 9);
+  audio.giggle(0.9, panTo(G.elfPos));
+  setTimeout(() => audio.jingle(0.6, panTo(G.elfPos)), 500);
+  rumble(0.3, 0.5, 200);
+  toast(finale ? 'He knows what you\'ve done… RUN!' : 'You wandered into his hiding place…', 2.6, '#ff3b2f');
+}
+
 function updateElf(dt) {
   G.elfSeen = canSeeElf();
   const dist = Math.hypot(G.pos.x - G.elfPos.x, G.pos.z - G.elfPos.z);
@@ -2550,7 +2746,23 @@ function updateElf(dt) {
   const playerSafe = Math.hypot(G.pos.x, G.pos.z) < CFG.safeRadius;
 
   G.elfMoving = false;
-  if (active && !G.elfSeen) {
+  const finale = G.candies >= CFG.candyCount;
+  const lurkR = CFG.elfLurkRadius + G.candies * 1.2;
+  if (active && G.elfMode === 'lurk') {
+    if (finale || (dist < lurkR && dy < 3)) wakeElf(finale);
+    else {
+      // waiting... he turns to watch you, but only while you aren't looking
+      if (!G.elfSeen) {
+        const want = Math.atan2(G.pos.x - G.elfPos.x, G.pos.z - G.elfPos.z);
+        G.elfYaw += Math.atan2(Math.sin(want - G.elfYaw), Math.cos(want - G.elfYaw)) * Math.min(1, dt * 2);
+      }
+      G.elfReach = lerp(G.elfReach, 0, dt * 4);
+      G.elfGiggleT -= dt;
+      if (dist < lurkR + 10 && G.elfGiggleT <= 0) { G.elfGiggleT = rrand(8, 14); audio.giggle(0.25, panTo(G.elfPos)); }
+    }
+  }
+  const hunting = active && G.elfMode === 'hunt';
+  if (hunting && !G.elfSeen) {
     let speed = CFG.elfBaseSpeed + G.candies * CFG.elfSpeedPerCandy;
     if (dist > 22) speed *= 1.8;
 
@@ -2586,10 +2798,18 @@ function updateElf(dt) {
     if (r < CFG.safeRadius) { G.elfPos.x *= CFG.safeRadius / r; G.elfPos.z *= CFG.safeRadius / r; }
     settle(G.elf, dt);
 
-    G.elfUnseenFar = dist > 26 ? G.elfUnseenFar + dt : 0;
     const actual = Math.hypot(G.elfPos.x - before.x, G.elfPos.z - before.z);
     G.elfStuckT = actual < speed * dt * 0.25 && dist > 3 ? G.elfStuckT + dt : 0;
-    if (G.elfUnseenFar > 2.5 || G.elfStuckT > 2.5) { teleportElf(); G.elfUnseenFar = 0; }
+    if (G.elfStuckT > 2.5) teleportElf();
+    if (finale) {
+      // once you have all the candy he never stops coming
+      G.elfUnseenFar = dist > 26 ? G.elfUnseenFar + dt : 0;
+      if (G.elfUnseenFar > 2.5) { teleportElf(); G.elfUnseenFar = 0; }
+    } else {
+      // outrun him and he loses your scent, settling down to lurk wherever he is
+      G.elfLostT = dist > 32 ? G.elfLostT + dt : 0;
+      if (G.elfLostT > 6) { G.elfMode = 'lurk'; G.elfLostT = 0; }
+    }
 
     G.elfReach = lerp(G.elfReach, dist < 6 ? 1 : 0, dt * 6);
     G.elfTilt = lerp(G.elfTilt, 0, dt * 4);
@@ -2613,7 +2833,7 @@ function updateElf(dt) {
     }
   }
 
-  if (active && !G.elfSeen && !playerSafe && dist < CFG.catchDist && dy < 1.2) { caught('elf'); return; }
+  if (hunting && !G.elfSeen && !playerSafe && dist < CFG.catchDist && dy < 1.2) { caught('elf'); return; }
 
   // Stare him down: keep the flashlight on him up close and he'll scurry away
   const glaring = active && G.elfSeen && dist < 7 && inFlashBeam(elfPoints[1]);
@@ -2627,7 +2847,8 @@ function updateElf(dt) {
     sparkBurst(tmpV.set(G.elfPos.x, G.elfPos.y + 1.1, G.elfPos.z), 80, COLORS.elf, { speed: 4 });
     for (let i = 0; i < 8; i++) smokeFx.emit({ x: G.elfPos.x + rrand(-0.4, 0.4), y: G.elfPos.y + rrand(0.3, 1.5), z: G.elfPos.z + rrand(-0.4, 0.4),
       vx: rrand(-0.5, 0.5), vy: rrand(0.2, 0.8), vz: rrand(-0.5, 0.5), life: rrand(1.5, 2.5), r: 0.08, g: 0.06, b: 0.1, a: 0.6, size: 0.8, size1: 2, drag: 1, vr: rrand(-1, 1) });
-    teleportElf();
+    relocateElf(30);
+    if (!finale) G.elfMode = 'lurk';
     G.elfUnseenFar = 0;
     toast('He scurried off into the dark…', 2.2, '#ffe39a');
   }
@@ -2725,10 +2946,92 @@ function updateGhosts(dt, t) {
 // ============================================================================
 // Update: skeletons
 // ============================================================================
+// Swing the flashlight like a club. Skeletons take three hits; spiders get driven back.
+function swingHit(fx, fz) {
+  let hit = false;
+  for (const s of skeletons) {
+    if (s.state !== 'walk' && s.state !== 'rising') continue;
+    const dx = s.pos.x - G.pos.x, dz = s.pos.z - G.pos.z, d = Math.hypot(dx, dz);
+    if (d > 2.1 || Math.abs(s.pos.y - G.pos.y) > 1.3) continue;
+    if (d > 0.5 && (dx * fx + dz * fz) / d < 0.3) continue;   // must be in front of you
+    hitSkeleton(s, dx / (d || 1), dz / (d || 1));
+    hit = true;
+  }
+  for (const sp of spiders) {
+    if (sp.state !== 'hunt' && sp.state !== 'retreat') continue;
+    const dx = sp.pos.x - G.pos.x, dz = sp.pos.z - G.pos.z, d = Math.hypot(dx, dz);
+    if (d > 2.2 || Math.abs(sp.pos.y - G.pos.y) > 1.3 || (d > 0.5 && (dx * fx + dz * fz) / d < 0.3)) continue;
+    sp.state = 'retreat'; sp.timer = 1.8;
+    audio.hiss(0.8, panTo(sp.pos)); audio.bonk(0.7, panTo(sp.pos));
+    sparkBurst(tmpV.set(sp.pos.x, sp.pos.y + 0.6, sp.pos.z), 20, [[0.4, 1, 0.5]], { speed: 2, size: 0.07 });
+    hit = true;
+  }
+  if (hit) { rumble(0.6, 0.4, 120); G.shake = Math.max(G.shake, 0.04); }
+}
+
+function hitSkeleton(s, nx, nz) {
+  s.hp--;
+  s.stagger = 0.55;
+  s.knock.set(nx * 7, 0, nz * 7);
+  audio.bonk(1, panTo(s.pos));
+  audio.rattle(0.8, panTo(s.pos));
+  sparkBurst(tmpV.set(s.pos.x, s.pos.y + 1.3, s.pos.z), 25, [[1, 0.95, 0.8], [0.9, 0.85, 0.7]], { speed: 3, size: 0.06, grav: -6 });
+  if (s.hp <= 0) smashSkeleton(s, nx, nz);
+}
+
+// Shatter into a spray of tumbling bones
+const boneDebris = [];
+const _dq = new THREE.Quaternion(), _dv = new THREE.Vector3();
+function smashSkeleton(s, nx, nz) {
+  s.state = 'dead'; s.deadT = rrand(50, 70);
+  s.root.updateMatrixWorld(true);
+  s.root.traverse((o) => {
+    if (!o.isMesh) return;
+    const m = o.clone();
+    o.getWorldPosition(m.position); o.getWorldQuaternion(m.quaternion); o.getWorldScale(m.scale);
+    scene.add(m);
+    boneDebris.push({
+      m, t: 0,
+      v: new THREE.Vector3(nx * rrand(1, 4) + rrand(-1.5, 1.5), rrand(2, 5), nz * rrand(1, 4) + rrand(-1.5, 1.5)),
+      w: new THREE.Vector3(rrand(-12, 12), rrand(-12, 12), rrand(-12, 12)),
+    });
+  });
+  s.root.visible = false;
+  dirtBurst(s.pos.x, s.pos.y, s.pos.z);
+  audio.rattle(1, panTo(s.pos)); setTimeout(() => audio.rattle(0.8, 0), 120); setTimeout(() => audio.rattle(0.5, 0), 300);
+  rumble(0.8, 0.6, 250);
+  toast('Skeleton smashed!', 1.5, '#e8e0c8');
+}
+function updateBoneDebris(dt) {
+  for (let i = boneDebris.length - 1; i >= 0; i--) {
+    const b = boneDebris[i];
+    b.t += dt;
+    const ground = heightAt(b.m.position.x, b.m.position.z) + 0.04;
+    if (b.t < 4) {
+      b.v.y -= GRAVITY * dt;
+      b.m.position.addScaledVector(b.v, dt);
+      if (b.m.position.y < ground) {
+        b.m.position.y = ground;
+        b.v.y = Math.abs(b.v.y) * 0.3; b.v.x *= 0.6; b.v.z *= 0.6; b.w.multiplyScalar(0.5);
+      }
+      _dq.setFromEuler(new THREE.Euler(b.w.x * dt, b.w.y * dt, b.w.z * dt));
+      b.m.quaternion.multiply(_dq);
+    } else b.m.position.y -= dt * 0.15;   // slowly sink back into the earth
+    if (b.t > 9) { scene.remove(b.m); boneDebris.splice(i, 1); }
+  }
+}
+function clearBoneDebris() { for (const b of boneDebris) scene.remove(b.m); boneDebris.length = 0; }
+
 function updateSkeletons(dt) {
+  updateBoneDebris(dt);
   for (const s of skeletons) {
     const dist = Math.hypot(G.pos.x - s.pos.x, G.pos.z - s.pos.z);
     const ground = heightAt(s.home.x, s.home.z);
+    if (s.state === 'dead') {
+      s.deadT -= dt;
+      if (s.deadT <= 0) { s.state = 'buried'; s.hp = 3; s.pos.set(s.home.x, ground - 1.9, s.home.z); }
+      continue;
+    }
     if (s.state === 'buried') {
       if (dist < 9 && G.time > 8 && !houseAt(G.pos)) {
         s.state = 'rising'; s.timer = 0; s.root.visible = true;
@@ -2746,6 +3049,15 @@ function updateSkeletons(dt) {
       s.arms[0].rotation.x = s.arms[1].rotation.x = -2.6 * (1 - k) - 1.3 * k;
       s.body.rotation.x = 0.4 * (1 - k);
       if (k >= 1) { s.state = 'walk'; s.lostT = 0; }
+    } else if (s.state === 'walk' && s.stagger > 0) {
+      // reeling from a hit
+      s.stagger -= dt;
+      s.pos.addScaledVector(s.knock, dt);
+      s.knock.multiplyScalar(Math.exp(-7 * dt));
+      collide(s.pos, 0.3, 1.8);
+      settle(s, dt);
+      s.body.rotation.x = -0.5 * (s.stagger / 0.55);
+      s.arms[0].rotation.x = s.arms[1].rotation.x = -0.4;
     } else if (s.state === 'walk') {
       const lit = inFlashBeam(_g.set(s.pos.x, s.pos.y + 1.2, s.pos.z), 20);
       const speed = (lit ? 0.7 : 2.1) + G.candies * 0.1;
@@ -3184,4 +3496,4 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // handy for debugging from the console
-window.__game = { G, CFG, scene, camera, setState, startGame, houses, ghosts, skeletons, spiders, heightAt, trail, clearPath, blockedAt, solids, circles };
+window.__game = { G, CFG, scene, camera, setState, startGame, houses, ghosts, skeletons, spiders, heightAt, trail, clearPath, blockedAt, solids, circles, bushes };

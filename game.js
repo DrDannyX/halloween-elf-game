@@ -3025,16 +3025,24 @@ function setObjective() {
     : 'Bring the candy to the green cauldron to banish the Elf!';
 }
 
+function goFullscreen() {
+  // full screen + landscape where the browser allows it (Android). Safari on iPhone doesn't,
+  // and some browsers throw or don't return a promise, so never let this get in the way.
+  try {
+    const el = document.documentElement;
+    if (!touch.on || document.fullscreenElement || !el.requestFullscreen) return;
+    const r = el.requestFullscreen();
+    if (r && r.then) r.then(() => { try { screen.orientation?.lock?.('landscape')?.catch?.(() => {}); } catch (_) {} }).catch(() => {});
+  } catch (_) {}
+}
+
 function startGame() {
-  audio.init();
-  if (touch.on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
-    // full screen + landscape where the browser allows it (Android); iPhone Safari doesn't
-    document.documentElement.requestFullscreen().then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
-  }
+  try { audio.init(); } catch (_) {}
   resetGame();
   setState('playing');
   setObjective();
   toast('He only moves when no one is watching…', 4, '#ff3b2f');
+  goFullscreen();
 }
 
 // ============================================================================

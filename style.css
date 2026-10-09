@@ -211,3 +211,8 @@ body.touch .touch-help { display: block; }
 .play-btn { font-family: Creepster, fantasy; font-size: 30px; letter-spacing: 2px; padding: 6px 34px; color: #fff;
   background: rgba(255,138,42,.25); border-color: var(--orange); box-shadow: 0 0 18px rgba(255,100,0,.35); }
 @media (max-height: 500px) { .play-btn { font-size: 24px; padding: 4px 28px; } }
+
+#bootError {
+  display: none; position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 50; max-width: 92vw;
+  font: 13px system-ui, sans-serif; color: #fff; background: rgba(170,20,20,.9); padding: 8px 12px; border-radius: 6px;
+}

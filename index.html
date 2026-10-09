@@ -11,6 +11,20 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <script>
+    // If the game fails to start in some browser, say so on screen instead of silently doing nothing.
+    function showBootError(msg) {
+      var d = document.getElementById('bootError');
+      if (!d) { d = document.createElement('div'); d.id = 'bootError'; document.body.appendChild(d); }
+      d.textContent = '⚠ ' + msg; d.style.display = 'block';
+    }
+    window.addEventListener('error', function (e) {
+      showBootError((e.message || 'Something went wrong') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+    });
+    setTimeout(function () {
+      if (!window.__game) showBootError('The game could not load in this browser. On iPhone/iPad, please update to iOS 16.4 or newer.');
+    }, 10000);
+  </script>
   <div id="game"></div>
 
   <div id="vignette"></div>
